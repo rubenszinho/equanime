@@ -1,0 +1,26 @@
+{
+  "name": "equanime-api",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/zod-openapi": "^0.19.10",
+    "hono": "^4.13.13",
+    "jose": "^6.1.0",
+    "pdf-lib": "^1.17.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.10.12",
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.151.0"
+  }
+}

@@ -1,0 +1,12 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import AnalysisForm from "../../components/AnalysisForm";
+---
+
+<Layout>
+	<section class="card">
+		<h1>Nova análise de banca</h1>
+		<p class="muted">Informe o candidato, os avaliadores e, quando houver, o orientador e o título do trabalho.</p>
+		<AnalysisForm client:load />
+	</section>
+</Layout>

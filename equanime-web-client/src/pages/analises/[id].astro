@@ -1,0 +1,13 @@
+---
+export const prerender = false;
+
+import Layout from "../../layouts/Layout.astro";
+import AnalysisView from "../../components/AnalysisView";
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect("/analises/nova");
+---
+
+<Layout>
+	<AnalysisView client:load analysisId={id} />
+</Layout>

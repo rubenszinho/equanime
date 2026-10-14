@@ -1,0 +1,25 @@
+---
+import "../styles/global.css";
+---
+
+<!doctype html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Equânime</title>
+	</head>
+	<body>
+		<header>
+			<a href="/"><strong>Equânime</strong></a>
+			<nav>
+				<a href="/analises/nova">Nova análise</a>
+			</nav>
+		</header>
+		<main>
+			<slot />
+		</main>
+	</body>
+</html>

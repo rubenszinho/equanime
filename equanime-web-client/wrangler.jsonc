@@ -1,0 +1,25 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "equanime-web-client",
+	"compatibility_date": "2026-10-14",
+	"compatibility_flags": ["global_fetch_strictly_public", "nodejs_compat"],
+	"main": "@astrojs/cloudflare/entrypoints/server",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true,
+		"logs": { "enabled": true, "head_sampling_rate": 1 },
+		"traces": { "enabled": true, "head_sampling_rate": 1 }
+	},
+	"vars": {
+		"EQUANIME_API_URL": ""
+	},
+	"services": [
+		{
+			"binding": "EQUANIME_API",
+			"service": "equanime-api"
+		}
+	]
+}

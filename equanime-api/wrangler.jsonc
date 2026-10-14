@@ -1,0 +1,121 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "equanime-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-14",
+	"compatibility_flags": ["nodejs_compat"],
+	"upload_source_maps": true,
+	"observability": {
+		"enabled": true,
+		"logs": { "enabled": true, "head_sampling_rate": 1 },
+		"traces": { "enabled": true, "head_sampling_rate": 1 }
+	},
+	"vars": {
+		"AUTH_MODE": "dev",
+		"EXECUTION_MODE": "manual",
+		"COLLECTOR_MODE": "fixture",
+		"COLLECTOR_URL": "http://127.0.0.1:8090",
+		"LLM_BASE_URL": "",
+		"LLM_MODEL": "",
+		"MAX_REVIEWERS": "12",
+		"MAX_ANALYSES_PER_HOUR": "30",
+		"RETENTION_DAYS": "90",
+		"TEAM_DOMAIN": "",
+		"POLICY_AUD": "",
+		"ACCESS_CLIENT_ID": ""
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "equanime",
+			"database_id": "00000000-0000-0000-0000-000000000001",
+			"migrations_dir": "migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "EVIDENCE",
+			"bucket_name": "equanime-evidence"
+		}
+	],
+	"workflows": [
+		{
+			"binding": "ANALYSIS_WORKFLOW",
+			"name": "equanime-analysis",
+			"class_name": "AnalysisWorkflow"
+		}
+	],
+	"triggers": {
+		"crons": ["0 3 * * *"]
+	},
+	"env": {
+		"staging": {
+			"name": "equanime-api-staging",
+			"vars": {
+				"AUTH_MODE": "access",
+				"EXECUTION_MODE": "workflow",
+				"COLLECTOR_MODE": "http",
+				"COLLECTOR_URL": "https://collector-staging.internal",
+				"LLM_BASE_URL": "",
+				"LLM_MODEL": "",
+				"MAX_REVIEWERS": "12",
+				"MAX_ANALYSES_PER_HOUR": "30",
+				"RETENTION_DAYS": "90",
+				"TEAM_DOMAIN": "",
+				"POLICY_AUD": "",
+				"ACCESS_CLIENT_ID": ""
+			},
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "equanime-staging",
+					"database_id": "00000000-0000-0000-0000-000000000002",
+					"migrations_dir": "migrations"
+				}
+			],
+			"r2_buckets": [{ "binding": "EVIDENCE", "bucket_name": "equanime-evidence-staging" }],
+			"workflows": [
+				{
+					"binding": "ANALYSIS_WORKFLOW",
+					"name": "equanime-analysis-staging",
+					"class_name": "AnalysisWorkflow"
+				}
+			],
+			"triggers": { "crons": ["0 3 * * *"] }
+		},
+		"production": {
+			"name": "equanime-api-production",
+			"vars": {
+				"AUTH_MODE": "access",
+				"EXECUTION_MODE": "workflow",
+				"COLLECTOR_MODE": "http",
+				"COLLECTOR_URL": "https://collector.internal",
+				"LLM_BASE_URL": "",
+				"LLM_MODEL": "",
+				"MAX_REVIEWERS": "12",
+				"MAX_ANALYSES_PER_HOUR": "30",
+				"RETENTION_DAYS": "90",
+				"TEAM_DOMAIN": "",
+				"POLICY_AUD": "",
+				"ACCESS_CLIENT_ID": ""
+			},
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "equanime-production",
+					"database_id": "00000000-0000-0000-0000-000000000003",
+					"migrations_dir": "migrations"
+				}
+			],
+			"r2_buckets": [{ "binding": "EVIDENCE", "bucket_name": "equanime-evidence-production" }],
+			"workflows": [
+				{
+					"binding": "ANALYSIS_WORKFLOW",
+					"name": "equanime-analysis-production",
+					"class_name": "AnalysisWorkflow"
+				}
+			],
+			"triggers": { "crons": ["0 3 * * *"] }
+		}
+	}
+}
