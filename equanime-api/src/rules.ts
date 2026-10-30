@@ -34,6 +34,28 @@ async function samePerson(resolver: IdentityResolver | undefined, left: string, 
 	}
 }
 
+// Every name the CV gives for its owner: the one asked for, the one on the CV, citation forms.
+function namesOf(curriculum: Curriculum): string[] {
+	return [...new Set([curriculum.detected_name, curriculum.requested_name, ...(curriculum.aliases ?? [])].filter((item): item is string => Boolean(item)))];
+}
+
+// A Lattes ID on the record settles identity; names are the fallback.
+async function isPerson(resolver: IdentityResolver | undefined, name: string, id: string | null | undefined, person: Curriculum): Promise<boolean> {
+	if (id && person.lattes_id) return id === person.lattes_id;
+	for (const candidate of namesOf(person)) if (await samePerson(resolver, name, candidate)) return true;
+	return false;
+}
+
+async function listsPerson(resolver: IdentityResolver | undefined, names: string[], ids: string[] | undefined, person: Curriculum): Promise<boolean> {
+	if (ids?.includes(person.lattes_id)) return true;
+	for (const name of names) {
+		for (const candidate of namesOf(person)) if (await samePerson(resolver, name, candidate)) return true;
+	}
+	return false;
+}
+
+const unread = (curriculum: Curriculum) => curriculum.collection_status === "failed" || curriculum.collection_status === "needs_upload";
+
 export async function evaluateReviewer(input: {
 	candidate: Curriculum;
 	reviewer: Curriculum;
@@ -78,20 +100,16 @@ export async function evaluateReviewer(input: {
 
 async function evaluateCoauthorship(candidate: Curriculum, reviewer: Curriculum, resolver?: IdentityResolver) {
 	const evidence: Evidence[] = [];
-	const unavailable = candidate.collection_status === "failed" || reviewer.collection_status === "failed";
+	const unavailable = unread(candidate) || unread(reviewer);
 	const partial = candidate.collection_status === "partial" || reviewer.collection_status === "partial";
 	for (const publication of candidate.publications) {
-		for (const author of publication.authors) {
-			if (await samePerson(resolver, author, reviewer.detected_name ?? reviewer.requested_name)) {
-				evidence.push(publicationEvidence(candidate, reviewer, publication, "high"));
-			}
+		if (await listsPerson(resolver, publication.authors, publication.author_ids, reviewer)) {
+			evidence.push(publicationEvidence(candidate, reviewer, publication, "high"));
 		}
 	}
 	for (const publication of reviewer.publications) {
-		for (const author of publication.authors) {
-			if (await samePerson(resolver, author, candidate.detected_name ?? candidate.requested_name)) {
-				evidence.push(publicationEvidence(reviewer, candidate, publication, "high"));
-			}
+		if (await listsPerson(resolver, publication.authors, publication.author_ids, candidate)) {
+			evidence.push(publicationEvidence(reviewer, candidate, publication, "high"));
 		}
 	}
 	for (const left of candidate.publications) {
@@ -107,20 +125,18 @@ async function evaluateCoauthorship(candidate: Curriculum, reviewer: Curriculum,
 
 async function evaluateProjects(candidate: Curriculum, reviewer: Curriculum, resolver?: IdentityResolver) {
 	const evidence: Evidence[] = [];
-	const unavailable = candidate.collection_status === "failed" || reviewer.collection_status === "failed";
+	const unavailable = unread(candidate) || unread(reviewer);
 	const partial = candidate.collection_status === "partial" || reviewer.collection_status === "partial";
 	const reviewerName = reviewer.detected_name ?? reviewer.requested_name;
 	const candidateName = candidate.detected_name ?? candidate.requested_name;
 	for (const project of candidate.projects) {
-		for (const participant of project.participants) {
-			if (await samePerson(resolver, participant, reviewerName)) {
-				evidence.push(projectEvidence(candidate, reviewerName, project));
-			}
+		if (await listsPerson(resolver, project.participants, project.participant_ids, reviewer)) {
+			evidence.push(projectEvidence(candidate, reviewerName, project));
 		}
 	}
 	for (const project of reviewer.projects) {
-		for (const participant of project.participants) {
-			if (await samePerson(resolver, participant, candidateName)) evidence.push(projectEvidence(reviewer, candidateName, project));
+		if (await listsPerson(resolver, project.participants, project.participant_ids, candidate)) {
+			evidence.push(projectEvidence(reviewer, candidateName, project));
 		}
 	}
 	for (const left of candidate.projects) {
@@ -133,33 +149,48 @@ async function evaluateProjects(candidate: Curriculum, reviewer: Curriculum, res
 
 async function evaluateAdvising(advisor: Curriculum, reviewer: Curriculum, analyzedAt: string, resolver?: IdentityResolver) {
 	const evidence: Evidence[] = [];
-	const yearLimit = new Date(analyzedAt).getUTCFullYear() - 5;
+	const thisYear = new Date(analyzedAt).getUTCFullYear();
+	const yearLimit = thisYear - 5;
+	const advisorName = advisor.detected_name ?? advisor.requested_name;
 	const reviewerName = reviewer.detected_name ?? reviewer.requested_name;
 	let missingPeriod = false;
-	if (advisor.collection_status !== "failed") {
+	const consider = (record: { level: string; year: number | null; period: string | null; ongoing?: boolean; institution: string | null; source_record: string }, source: Curriculum, confidence: "high" | "medium") => {
+		const label = orientationLabel(record.level);
+		if (!label) return;
+		// Ongoing advising is current by definition.
+		const year = record.ongoing ? thisYear : endYear(record.year, record.period);
+		if (year === null) {
+			missingPeriod = true;
+			return;
+		}
+		if (year < yearLimit) return;
+		evidence.push({
+			rule: "recent_advisor_relationship",
+			people: [advisorName, reviewerName],
+			record: record.source_record,
+			year_or_period: record.period ?? String(year),
+			source_curriculum: sourceOf(source),
+			consulted_at: source.consulted_at,
+			orientation_type: label,
+			institution: record.institution,
+			confidence,
+			structured_record: record,
+		});
+	};
+	// The advisor's CV lists their advisees.
+	if (!unread(advisor)) {
 		for (const record of advisor.advising) {
-			const label = orientationLabel(record.level);
-			if (!label) continue;
-			if (!(await samePerson(resolver, record.advisee_name, reviewerName))) continue;
-			const year = endYear(record.year, record.period);
-			if (year === null) {
-				missingPeriod = true;
-				continue;
-			}
-			if (year >= yearLimit) {
-				evidence.push({
-					rule: "recent_advisor_relationship",
-					people: [advisor.detected_name ?? advisor.requested_name, reviewerName],
-					record: record.source_record,
-					year_or_period: record.period ?? String(year),
-					source_curriculum: sourceOf(advisor),
-					consulted_at: advisor.consulted_at,
-					orientation_type: label,
-					institution: record.institution,
-					confidence: matchNames(record.advisee_name, reviewerName).confidence === "high" ? "high" : "medium",
-					structured_record: record,
-				});
-			}
+			if (!(await isPerson(resolver, record.advisee_name, record.advisee_id, reviewer))) continue;
+			const confidence = record.advisee_id || matchNames(record.advisee_name, reviewerName).confidence === "high" ? "high" : "medium";
+			consider(record, advisor, confidence);
+		}
+	}
+	// The reviewer's CV names who advised their degrees.
+	if (!unread(reviewer)) {
+		for (const record of reviewer.training ?? []) {
+			if (!record.advisor_name && !record.advisor_id) continue;
+			if (!(await isPerson(resolver, record.advisor_name ?? "", record.advisor_id, advisor))) continue;
+			consider(record, reviewer, record.advisor_id ? "high" : "medium");
 		}
 	}
 	const inconclusive = advisor.collection_status !== "complete" || (missingPeriod && evidence.length === 0);

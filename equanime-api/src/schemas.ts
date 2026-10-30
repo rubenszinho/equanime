@@ -13,6 +13,9 @@ export const PersonSchema = z
 			description: lattesDescription,
 			example: "http://lattes.cnpq.br/1111111111111111",
 		}),
+		curriculum_ref: z.string().optional().openapi({
+			description: "Opcional. Referência devolvida por POST /curriculos quando o usuário enviou o XML do currículo. Assistentes normalmente não usam este campo.",
+		}),
 	})
 	.openapi("Person");
 
@@ -61,6 +64,17 @@ export const EvidenceSchema = z
 	})
 	.openapi("Evidence");
 
+const CollectionStatusSchema = z.enum(["pending", "complete", "partial", "failed", "needs_upload"]).openapi({
+	description: "complete, partial ou failed. needs_upload: nenhuma fonte automática leu o currículo (por exemplo, a Plataforma Lattes pediu verificação humana); o usuário pode enviar o XML na página da análise.",
+});
+
+const ParticipantSchema = z.object({
+	name: z.string(),
+	lattes_url: z.string(),
+	collection_status: CollectionStatusSchema,
+	collection_message: z.string().nullable(),
+});
+
 const RuleCheckSchema = z.object({
 	detected: z.boolean(),
 	inconclusive: z.boolean(),
@@ -75,7 +89,8 @@ export const ReviewerResultSchema = z
 			detected_name: z.string().nullable(),
 			role: z.enum(["titular", "suplente"]),
 			lattes_url: z.string(),
-			collection_status: z.enum(["pending", "complete", "partial", "failed"]),
+			collection_status: CollectionStatusSchema,
+			collection_message: z.string().nullable(),
 		}),
 		status: z.enum(["no_conflict_identified", "potential_conflict", "inconclusive"]),
 		status_label: z.enum([
@@ -117,8 +132,8 @@ export const AnalysisSchema = z
 		assistant_summary: z.string().nullable().openapi({
 			description: "Síntese pronta para a resposta do assistente. Nula enquanto a análise não termina.",
 		}),
-		candidate: z.object({ name: z.string(), lattes_url: z.string() }),
-		advisor: z.object({ name: z.string(), lattes_url: z.string() }).nullable(),
+		candidate: ParticipantSchema,
+		advisor: ParticipantSchema.nullable(),
 		work_title: z.string().nullable(),
 		summary: z
 			.object({
@@ -132,6 +147,10 @@ export const AnalysisSchema = z
 		limitations: z.array(z.string()).openapi({
 			description: "Limitações e falhas parciais. A ausência de evidência não comprova inexistência de conflito.",
 		}),
+		needs_upload: z.boolean().openapi({
+			description: "Verdadeiro quando algum currículo precisa ser enviado pelo usuário. Nesse caso, oriente o usuário a abrir web_url, enviar o XML do Lattes e reprocessar.",
+		}),
+		web_url: z.string().nullable().openapi({ description: "Página da análise na aplicação web, para o usuário acompanhar e enviar currículos." }),
 		report_url: z.string().nullable().openapi({
 			description: "Caminho do PDF quando o relatório já foi gerado. Faça GET nesse caminho para obter o arquivo.",
 		}),
@@ -149,3 +168,23 @@ export const ErrorSchema = z
 	.openapi("Error");
 
 export type CreateAnalysisInput = z.infer<typeof CreateAnalysisSchema>;
+
+export const UploadSchema = z
+	.object({
+		curriculum_ref: z.string().openapi({ description: "Referência do currículo enviado, para usar em curriculum_ref." }),
+		lattes_id: z.string(),
+		name: z.string().nullable(),
+		updated_at: z.string().nullable().openapi({ description: "Data da última atualização do currículo no Lattes." }),
+		publications: z.number(),
+		projects: z.number(),
+		advising: z.number(),
+	})
+	.openapi("CurriculumUpload");
+
+export const ReprocessSchema = z
+	.object({
+		curriculum_refs: z.array(z.string()).max(20).default([]).openapi({
+			description: "Currículos enviados por POST /curriculos. Cada um substitui a coleta do participante com o mesmo identificador Lattes.",
+		}),
+	})
+	.openapi("Reprocess");

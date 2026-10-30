@@ -9,7 +9,14 @@ export default defineWorkersConfig(async () => {
 				workers: {
 					wrangler: { configPath: "./wrangler.jsonc" },
 					miniflare: {
-						bindings: { TEST_MIGRATIONS: migrations },
+						// wrangler.jsonc is production; tests run like local dev.
+						bindings: {
+							TEST_MIGRATIONS: migrations,
+							AUTH_MODE: "dev",
+							EXECUTION_MODE: "manual",
+							COLLECTOR_MODE: "fixture",
+							WEB_URL: "https://equanime.test",
+						},
 					},
 				},
 			},

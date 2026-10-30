@@ -1,4 +1,4 @@
-import { deleteAnalysis, expiredAnalyses, snapshotKeys } from "./repository";
+import { deleteAnalysis, deleteUpload, expiredAnalyses, expiredUploads, snapshotKeys } from "./repository";
 import { logInfo } from "./log";
 
 export async function purgeExpired(env: CloudflareBindings, now = new Date()): Promise<number> {
@@ -11,6 +11,11 @@ export async function purgeExpired(env: CloudflareBindings, now = new Date()): P
 		await Promise.all(keys.map((key) => env.EVIDENCE.delete(key)));
 		await deleteAnalysis(env.DB, row.id);
 		logInfo("analysis_purged", { analysis_id: row.id });
+	}
+	// Uploaded CVs follow the same window as the analyses that used them.
+	for (const upload of await expiredUploads(env.DB, before)) {
+		await env.EVIDENCE.delete(upload.object_key);
+		await deleteUpload(env.DB, upload.id);
 	}
 	return rows.length;
 }

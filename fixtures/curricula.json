@@ -1,0 +1,64 @@
+{
+	"_comment": "Fixture curricula keyed by Lattes ID, shared by equanime-api (COLLECTOR_MODE=fixture) and equanime-collector (EQUANIME_COLLECTOR_BACKEND=fixture). Unknown IDs collect as an empty, complete CV under the requested name.",
+	"0000000000000000": {
+		"detected_name": null,
+		"collection_status": "failed",
+		"error_type": "temporary_unavailable",
+		"error_message": "Indisponibilidade temporária da Plataforma Lattes."
+	},
+	"7777777777777777": {
+		"collection_status": "partial",
+		"warnings": [{ "code": "partial_curriculum", "message": "Currículo parcialmente recuperado." }]
+	},
+	"9999999999999999": {
+		"detected_name": null,
+		"collection_status": "needs_upload",
+		"error_type": "captcha_required",
+		"error_message": "A Plataforma Lattes pediu uma verificação humana. Envie o XML do currículo para concluir."
+	},
+	"1111111111111111": {
+		"publications": [{
+			"title": "Métodos de Inteligência Artificial para políticas públicas",
+			"year": 2024,
+			"authors": ["João da Silva", "Carlos Pereira"],
+			"source_record": "Artigo 2024 — Métodos de Inteligência Artificial para políticas públicas"
+		}],
+		"projects": [{
+			"title": "Projeto Alpha de métodos computacionais",
+			"period": "2023–2025",
+			"institution": "ICMC USP",
+			"participants": ["João da Silva", "Ana Santos"],
+			"source_record": "Projeto de pesquisa (2023–2025) — Projeto Alpha de métodos computacionais"
+		}]
+	},
+	"2222222222222222": {
+		"detected_name": "Maria Souza",
+		"advising": [
+			{ "advisee_name": "Pedro Oliveira", "level": "doutorado", "year": 2024, "period": "2024", "institution": "ICMC USP", "source_record": "Orientação concluída de doutorado de Pedro Oliveira (2024)" },
+			{ "advisee_name": "Lucas Antigo", "level": "mestrado", "year": 2018, "period": "2018", "institution": "ICMC USP", "source_record": "Orientação concluída de mestrado de Lucas Antigo (2018)" }
+		]
+	},
+	"3333333333333333": {
+		"detected_name": "Carlos Pereira",
+		"publications": [{
+			"title": "Métodos de Inteligência Artificial para políticas públicas",
+			"year": 2024,
+			"authors": ["Carlos Pereira", "João da Silva"],
+			"source_record": "Artigo 2024 — Métodos de Inteligência Artificial para políticas públicas"
+		}]
+	},
+	"4444444444444444": {
+		"detected_name": "Ana C. Santos",
+		"projects": [{
+			"title": "Projeto Alpha de métodos computacionais",
+			"period": "2023–2025",
+			"institution": "ICMC USP",
+			"participants": ["Ana C. Santos", "João da Silva"],
+			"source_record": "Projeto de pesquisa (2023–2025) — Projeto Alpha de métodos computacionais"
+		}]
+	},
+	"5555555555555555": { "detected_name": "Pedro Oliveira" },
+	"8888888888888888": {
+		"detected_name": "Nome Divergente do Currículo"
+	}
+}

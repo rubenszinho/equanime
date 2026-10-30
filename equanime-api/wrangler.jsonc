@@ -5,22 +5,32 @@
 	"compatibility_date": "2026-10-14",
 	"compatibility_flags": ["nodejs_compat"],
 	"upload_source_maps": true,
+	// This file is production. Local dev overrides the vars in .dev.vars (see .dev.vars.example).
+	"workers_dev": false,
+	"preview_urls": false,
+	"routes": [{ "pattern": "api.equanime.rubrion.ai", "custom_domain": true }],
 	"observability": {
 		"enabled": true,
 		"logs": { "enabled": true, "head_sampling_rate": 1 },
 		"traces": { "enabled": true, "head_sampling_rate": 1 }
 	},
+	// The PDF embeds Public Sans so Portuguese accents survive.
+	"rules": [{ "type": "Data", "globs": ["**/*.ttf"], "fallthrough": true }],
 	"vars": {
-		"AUTH_MODE": "dev",
-		"EXECUTION_MODE": "manual",
-		"COLLECTOR_MODE": "fixture",
-		"COLLECTOR_URL": "http://127.0.0.1:8090",
+		"AUTH_MODE": "access",
+		"EXECUTION_MODE": "workflow",
+		// http: CNPq's institutional extractor through equanime-collector; upload: users send the XML.
+		"COLLECTOR_MODE": "http",
+		"COLLECTOR_URL": "https://equanime-collector.rubrion.ai",
+		"COLLECTOR_ACCESS_ID": "",
+		"WEB_URL": "https://equanime.rubrion.ai",
 		"LLM_BASE_URL": "",
 		"LLM_MODEL": "",
 		"MAX_REVIEWERS": "12",
 		"MAX_ANALYSES_PER_HOUR": "30",
 		"RETENTION_DAYS": "90",
-		"TEAM_DOMAIN": "",
+		"TEAM_DOMAIN": "https://rubrion.cloudflareaccess.com",
+		// Comma-separated AUD tags: the web app's Access application (and the API's, if it gets one).
 		"POLICY_AUD": "",
 		"ACCESS_CLIENT_ID": ""
 	},
@@ -47,75 +57,5 @@
 	],
 	"triggers": {
 		"crons": ["0 3 * * *"]
-	},
-	"env": {
-		"staging": {
-			"name": "equanime-api-staging",
-			"vars": {
-				"AUTH_MODE": "access",
-				"EXECUTION_MODE": "workflow",
-				"COLLECTOR_MODE": "http",
-				"COLLECTOR_URL": "https://collector-staging.internal",
-				"LLM_BASE_URL": "",
-				"LLM_MODEL": "",
-				"MAX_REVIEWERS": "12",
-				"MAX_ANALYSES_PER_HOUR": "30",
-				"RETENTION_DAYS": "90",
-				"TEAM_DOMAIN": "",
-				"POLICY_AUD": "",
-				"ACCESS_CLIENT_ID": ""
-			},
-			"d1_databases": [
-				{
-					"binding": "DB",
-					"database_name": "equanime-staging",
-					"database_id": "00000000-0000-0000-0000-000000000002",
-					"migrations_dir": "migrations"
-				}
-			],
-			"r2_buckets": [{ "binding": "EVIDENCE", "bucket_name": "equanime-evidence-staging" }],
-			"workflows": [
-				{
-					"binding": "ANALYSIS_WORKFLOW",
-					"name": "equanime-analysis-staging",
-					"class_name": "AnalysisWorkflow"
-				}
-			],
-			"triggers": { "crons": ["0 3 * * *"] }
-		},
-		"production": {
-			"name": "equanime-api-production",
-			"vars": {
-				"AUTH_MODE": "access",
-				"EXECUTION_MODE": "workflow",
-				"COLLECTOR_MODE": "http",
-				"COLLECTOR_URL": "https://collector.internal",
-				"LLM_BASE_URL": "",
-				"LLM_MODEL": "",
-				"MAX_REVIEWERS": "12",
-				"MAX_ANALYSES_PER_HOUR": "30",
-				"RETENTION_DAYS": "90",
-				"TEAM_DOMAIN": "",
-				"POLICY_AUD": "",
-				"ACCESS_CLIENT_ID": ""
-			},
-			"d1_databases": [
-				{
-					"binding": "DB",
-					"database_name": "equanime-production",
-					"database_id": "00000000-0000-0000-0000-000000000003",
-					"migrations_dir": "migrations"
-				}
-			],
-			"r2_buckets": [{ "binding": "EVIDENCE", "bucket_name": "equanime-evidence-production" }],
-			"workflows": [
-				{
-					"binding": "ANALYSIS_WORKFLOW",
-					"name": "equanime-analysis-production",
-					"class_name": "AnalysisWorkflow"
-				}
-			],
-			"triggers": { "crons": ["0 3 * * *"] }
-		}
 	}
 }

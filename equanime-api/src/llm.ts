@@ -1,5 +1,6 @@
 import { recordModelCall } from "./repository";
 import { logError, logInfo } from "./log";
+import { under } from "./collector";
 import { envString } from "./settings";
 
 export async function resolveAmbiguousIdentity(env: CloudflareBindings, analysisId: string, left: string, right: string): Promise<boolean> {
@@ -8,8 +9,9 @@ export async function resolveAmbiguousIdentity(env: CloudflareBindings, analysis
 	if (!env.LLM_API_KEY || !baseUrl || !model) return false;
 	const started = Date.now();
 	try {
-		const response = await fetch(new URL("/chat/completions", baseUrl), {
+		const response = await fetch(under(baseUrl, "chat/completions"), {
 			method: "POST",
+			signal: AbortSignal.timeout(20_000),
 			headers: { authorization: `Bearer ${env.LLM_API_KEY}`, "content-type": "application/json" },
 			body: JSON.stringify({
 				model,

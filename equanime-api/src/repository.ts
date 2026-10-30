@@ -42,6 +42,7 @@ type ParticipantRecord = {
 	collection_error: string | null;
 	consulted_at: string | null;
 	snapshot_key: string | null;
+	upload_id: string | null;
 	warnings_json: string;
 };
 
@@ -49,8 +50,8 @@ function mapParticipant(row: ParticipantRecord): ParticipantRow {
 	return { ...row, warnings: JSON.parse(row.warnings_json) as CurriculumWarning[] };
 }
 
-export async function findByIdempotency(db: D1Database, key: string): Promise<AnalysisRow | null> {
-	const row = await db.prepare("SELECT * FROM analyses WHERE idempotency_key = ?").bind(key).first<AnalysisRecord>();
+export async function findByIdempotency(db: D1Database, actor: string, key: string): Promise<AnalysisRow | null> {
+	const row = await db.prepare("SELECT * FROM analyses WHERE actor = ? AND idempotency_key = ?").bind(actor, key).first<AnalysisRecord>();
 	return row ? mapAnalysis(row) : null;
 }
 
@@ -80,15 +81,15 @@ export async function insertAnalysis(db: D1Database, row: AnalysisRow): Promise<
 export async function insertParticipant(db: D1Database, row: ParticipantRow): Promise<void> {
 	await db.prepare(`INSERT INTO participants (
 		id, analysis_id, kind, reviewer_role, requested_name, detected_name, lattes_url, lattes_id,
-		collection_status, collection_error, consulted_at, snapshot_key, warnings_json
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+		collection_status, collection_error, consulted_at, snapshot_key, upload_id, warnings_json
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
 		row.id, row.analysis_id, row.kind, row.reviewer_role, row.requested_name, row.detected_name, row.lattes_url,
-		row.lattes_id, row.collection_status, row.collection_error, row.consulted_at, row.snapshot_key, JSON.stringify(row.warnings),
+		row.lattes_id, row.collection_status, row.collection_error, row.consulted_at, row.snapshot_key, row.upload_id, JSON.stringify(row.warnings),
 	).run();
 }
 
 export async function listParticipants(db: D1Database, analysisId: string): Promise<ParticipantRow[]> {
-	const result = await db.prepare("SELECT * FROM participants WHERE analysis_id = ? ORDER BY kind, requested_name").bind(analysisId).all<ParticipantRecord>();
+	const result = await db.prepare("SELECT * FROM participants WHERE analysis_id = ? ORDER BY rowid").bind(analysisId).all<ParticipantRecord>();
 	return result.results.map(mapParticipant);
 }
 
@@ -170,4 +171,38 @@ export async function deleteAnalysis(db: D1Database, id: string): Promise<void> 
 export async function snapshotKeys(db: D1Database, analysisId: string): Promise<string[]> {
 	const rows = await db.prepare("SELECT snapshot_key FROM participants WHERE analysis_id = ? AND snapshot_key IS NOT NULL").bind(analysisId).all<{ snapshot_key: string }>();
 	return rows.results.map((row) => row.snapshot_key);
+}
+
+export type UploadRow = { id: string; actor: string; lattes_id: string; detected_name: string | null; object_key: string; created_at: string };
+
+export async function insertUpload(db: D1Database, row: UploadRow): Promise<void> {
+	await db.prepare("INSERT INTO uploads (id, actor, lattes_id, detected_name, object_key, created_at) VALUES (?, ?, ?, ?, ?, ?)").bind(
+		row.id, row.actor, row.lattes_id, row.detected_name, row.object_key, row.created_at,
+	).run();
+}
+
+export async function getUpload(db: D1Database, id: string): Promise<UploadRow | null> {
+	return db.prepare("SELECT * FROM uploads WHERE id = ?").bind(id).first<UploadRow>();
+}
+
+export async function attachUpload(db: D1Database, participantId: string, uploadId: string): Promise<void> {
+	await db.prepare("UPDATE participants SET upload_id = ? WHERE id = ?").bind(uploadId, participantId).run();
+}
+
+// Reprocessing keeps the board and its uploads and starts the run again.
+export async function resetAnalysis(db: D1Database, id: string, at: string): Promise<void> {
+	await db.batch([
+		db.prepare("UPDATE participants SET collection_status = 'pending', collection_error = NULL, consulted_at = NULL, snapshot_key = NULL, detected_name = NULL, warnings_json = '[]' WHERE analysis_id = ?").bind(id),
+		db.prepare("UPDATE analyses SET status = 'pending', message = ?, assistant_summary = NULL, summary_json = NULL, limitations_json = '[]', report_key = NULL, error_message = NULL, timings_json = '{}', updated_at = ?, completed_at = NULL WHERE id = ?").bind("A análise foi reenviada e aguarda processamento.", at, id),
+	]);
+	await addEvent(db, id, "pending", "A análise foi reenviada e aguarda processamento.", at);
+}
+
+export async function expiredUploads(db: D1Database, before: string): Promise<UploadRow[]> {
+	const rows = await db.prepare("SELECT * FROM uploads WHERE created_at < ?").bind(before).all<UploadRow>();
+	return rows.results;
+}
+
+export async function deleteUpload(db: D1Database, id: string): Promise<void> {
+	await db.prepare("DELETE FROM uploads WHERE id = ?").bind(id).run();
 }

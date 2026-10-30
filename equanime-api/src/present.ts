@@ -1,13 +1,25 @@
 import { AnalysisSchema } from "./schemas";
-import type { ReviewerChecks, ResultStatus, ReviewerRole } from "./domain";
+import type { ParticipantRow, ReviewerChecks, ResultStatus, ReviewerRole } from "./domain";
 import { RESULT_LABELS } from "./domain";
 import { getAnalysis, listParticipants, listResults } from "./repository";
+import { envString } from "./settings";
 
-export async function presentAnalysis(db: D1Database, id: string) {
-	const analysis = await getAnalysis(db, id);
+const TERMINAL = new Set(["completed", "completed_with_warnings", "failed"]);
+
+function person(participant: ParticipantRow) {
+	return {
+		name: participant.requested_name,
+		lattes_url: participant.lattes_url,
+		collection_status: participant.collection_status,
+		collection_message: participant.collection_error,
+	};
+}
+
+export async function presentAnalysis(env: CloudflareBindings, id: string) {
+	const analysis = await getAnalysis(env.DB, id);
 	if (!analysis) return null;
-	const participants = await listParticipants(db, id);
-	const results = await listResults(db, id);
+	const participants = await listParticipants(env.DB, id);
+	const results = await listResults(env.DB, id);
 	const candidate = participants.find((item) => item.kind === "candidate");
 	const advisor = participants.find((item) => item.kind === "advisor") ?? null;
 	const reviewers = participants.filter((item) => item.kind === "reviewer").map((participant) => {
@@ -20,24 +32,29 @@ export async function presentAnalysis(db: D1Database, id: string) {
 				role: (participant.reviewer_role ?? "titular") as ReviewerRole,
 				lattes_url: participant.lattes_url,
 				collection_status: participant.collection_status,
+				collection_message: participant.collection_error,
 			},
 			status: (result?.status ?? "inconclusive") as ResultStatus,
 			status_label: (result?.status_label ?? "ANÁLISE INCONCLUSIVA") as (typeof RESULT_LABELS)[ResultStatus],
 			checks,
 		};
 	});
+	const terminal = TERMINAL.has(analysis.status);
+	const web = envString(env, "WEB_URL").replace(/\/$/, "");
 	return AnalysisSchema.parse({
 		analysis_id: analysis.id,
 		type: analysis.type,
 		status: analysis.status,
 		message: analysis.message,
 		assistant_summary: analysis.assistant_summary,
-		candidate: { name: candidate?.requested_name ?? "", lattes_url: candidate?.lattes_url ?? "" },
-		advisor: advisor ? { name: advisor.requested_name, lattes_url: advisor.lattes_url } : null,
+		candidate: candidate ? person(candidate) : { name: "", lattes_url: "", collection_status: "failed", collection_message: null },
+		advisor: advisor ? person(advisor) : null,
 		work_title: analysis.work_title,
 		summary: analysis.summary_json ? JSON.parse(analysis.summary_json) : null,
-		reviewers: analysis.status === "completed" || analysis.status === "completed_with_warnings" || analysis.status === "failed" ? reviewers : [],
+		reviewers: terminal ? reviewers : [],
 		limitations: analysis.limitations,
+		needs_upload: terminal && participants.some((item) => item.collection_status === "needs_upload"),
+		web_url: web ? `${web}/analises/${analysis.id}` : null,
 		report_url: analysis.report_key ? `/analises/${analysis.id}/relatorio.pdf` : null,
 		created_at: analysis.created_at,
 		updated_at: analysis.updated_at,

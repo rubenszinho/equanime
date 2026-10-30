@@ -1,6 +1,9 @@
-import { env, SELF } from "cloudflare:test";
+import { createExecutionContext, env, SELF, waitOnExecutionContext } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
+import sample from "./fixtures/lattes-sample.xml?raw";
+import { createApp } from "../src/app";
 import { runAnalysis } from "../src/pipeline";
+import { latin1 } from "./helpers";
 
 const academic = {
 	candidate: { name: "João da Silva", lattes_url: "http://lattes.cnpq.br/1111111111111111" },
@@ -30,6 +33,8 @@ describe("analysis API", () => {
 		expect(spec.paths["/analises/{analysis_id}"]).toBeTruthy();
 		expect(spec.paths["/analises/{analysis_id}/relatorio.pdf"]).toBeTruthy();
 		expect(spec.info.description).toContain("POST /analises");
+		expect(spec.paths["/analises/{analysis_id}/reprocessar"]).toBeTruthy();
+		expect(spec.paths["/curriculos"]).toBeTruthy();
 	});
 
 	it("runs the academic workflow body and returns evidence plus PDF", async () => {
@@ -74,5 +79,78 @@ describe("analysis API", () => {
 		expect(second.status).toBe(200);
 		expect((await second.json<{ analysis_id: string }>()).analysis_id).toBe((await first.json<{ analysis_id: string }>()).analysis_id);
 		expect((await post({ ...academic, work_title: "Outro título" }, { "idempotency-key": "same-board" })).status).toBe(409);
+	});
+
+	it("marks an unreadable CV for upload, then resolves it after the XML is sent", async () => {
+		const board = {
+			candidate: academic.candidate,
+			advisor: academic.advisor,
+			// Nobody the candidate's CV names: only the reviewer's own CV can show a conflict.
+			reviewers: [{ name: "Rita Gomes", lattes_url: "http://lattes.cnpq.br/9999999999999999", role: "titular" }],
+		};
+		const created = await (await post(board)).json<{ analysis_id: string }>();
+		await runAnalysis(env, created.analysis_id);
+		type View = { status: string; needs_upload: boolean; web_url: string; reviewers: Array<{ status: string; reviewer: { collection_status: string } }> };
+		const before = await (await SELF.fetch(`https://equanime.test/analises/${created.analysis_id}`)).json<View>();
+		expect(before.status).toBe("completed_with_warnings");
+		expect(before.needs_upload).toBe(true);
+		expect(before.web_url).toBe(`https://equanime.test/analises/${created.analysis_id}`);
+		expect(before.reviewers[0]).toMatchObject({ status: "inconclusive", reviewer: { collection_status: "needs_upload" } });
+
+		const form = new FormData();
+		form.set("file", new File([latin1(sample.replace('NUMERO-IDENTIFICADOR="3333333333333333"', 'NUMERO-IDENTIFICADOR="9999999999999999"'))], "curriculo.xml", { type: "text/xml" }));
+		const uploaded = await SELF.fetch("https://equanime.test/curriculos", { method: "POST", body: form });
+		expect(uploaded.status).toBe(201);
+		const upload = await uploaded.json<{ curriculum_ref: string; lattes_id: string; publications: number }>();
+		expect(upload).toMatchObject({ lattes_id: "9999999999999999", publications: 2 });
+
+		const wrong = new FormData();
+		wrong.set("file", new File(["<html/>"], "x.xml"));
+		expect((await SELF.fetch("https://equanime.test/curriculos", { method: "POST", body: wrong })).status).toBe(400);
+
+		const again = await SELF.fetch(`https://equanime.test/analises/${created.analysis_id}/reprocessar`, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ curriculum_refs: [upload.curriculum_ref] }),
+		});
+		expect(again.status).toBe(202);
+		await runAnalysis(env, created.analysis_id);
+		const after = await (await SELF.fetch(`https://equanime.test/analises/${created.analysis_id}`)).json<View & { reviewers: Array<{ checks: Record<string, { detected: boolean }> }> }>();
+		expect(after.needs_upload).toBe(false);
+		expect(after.reviewers[0]?.status).toBe("potential_conflict");
+		expect(after.reviewers[0]?.checks.coauthorship.detected).toBe(true);
+		expect(after.reviewers[0]?.checks.recent_advisor_relationship.detected).toBe(true);
+	});
+
+	it("never fails an analysis because the collector is down", async () => {
+		const created = await (await post(academic)).json<{ analysis_id: string }>();
+		const down = { ...env, COLLECTOR_MODE: "http", COLLECTOR_URL: "http://127.0.0.1:9", COLLECTOR_TOKEN: "token" } as CloudflareBindings;
+		await runAnalysis(down, created.analysis_id);
+		const result = await (await SELF.fetch(`https://equanime.test/analises/${created.analysis_id}`)).json<{ status: string; needs_upload: boolean; summary: { inconclusive: number } }>();
+		expect(result.status).toBe("completed_with_warnings");
+		expect(result.needs_upload).toBe(true);
+		expect(result.summary.inconclusive).toBe(4);
+	});
+
+	it("keeps each caller's analyses to themselves", async () => {
+		const app = createApp();
+		const secured = { ...env, AUTH_MODE: "access", OPENWEBUI_KEY: "integration-key", POLICY_AUD: "" } as CloudflareBindings;
+		const call = async (path: string, init: RequestInit = {}) => {
+			const ctx = createExecutionContext();
+			const response = await app.fetch(new Request(`https://equanime.test${path}`, init), secured, ctx);
+			await waitOnExecutionContext(ctx);
+			return response;
+		};
+		expect((await call("/openapi.json")).status).toBe(200);
+		expect((await call("/analises", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(academic) })).status).toBe(401);
+		expect((await call("/analises", { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer wrong" }, body: JSON.stringify(academic) })).status).toBe(401);
+		const mine = await call("/analises", { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer integration-key" }, body: JSON.stringify(academic) });
+		expect(mine.status).toBe(202);
+		const { analysis_id } = await mine.json<{ analysis_id: string }>();
+		expect((await call(`/analises/${analysis_id}`, { headers: { authorization: "Bearer integration-key" } })).status).toBe(200);
+		// Created by someone else (the dev actor): looks missing.
+		const other = await (await post(academic)).json<{ analysis_id: string }>();
+		expect((await call(`/analises/${other.analysis_id}`, { headers: { authorization: "Bearer integration-key" } })).status).toBe(404);
+		expect((await call(`/analises/${other.analysis_id}/relatorio.pdf`, { headers: { authorization: "Bearer integration-key" } })).status).toBe(404);
 	});
 });

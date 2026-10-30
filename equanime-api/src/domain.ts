@@ -26,7 +26,10 @@ export const RESULT_LABELS = {
 
 export type ParticipantKind = "candidate" | "advisor" | "reviewer";
 export type ReviewerRole = "titular" | "suplente";
-export type CollectionStatus = "pending" | "complete" | "partial" | "failed";
+// needs_upload: no automatic source could read the CV (captcha, no institutional access);
+// the user can send the Lattes XML and reprocess.
+export type CollectionStatus = "pending" | "complete" | "partial" | "failed" | "needs_upload";
+export type CurriculumSource = "fixture" | "upload" | "institutional_xml";
 export type AnalysisType = "academic" | "selection";
 
 export type CurriculumWarning = { code: string; message: string };
@@ -35,6 +38,8 @@ export type PublicationRecord = {
 	title: string;
 	year: number | null;
 	authors: string[];
+	// Lattes IDs of the authors who have one, when the source carries them (XML does).
+	author_ids?: string[];
 	source_record: string;
 };
 
@@ -43,14 +48,29 @@ export type ProjectRecord = {
 	period: string | null;
 	institution: string | null;
 	participants: string[];
+	participant_ids?: string[];
 	source_record: string;
 };
 
 export type AdvisingRecord = {
 	advisee_name: string;
+	advisee_id?: string | null;
 	level: string;
 	year: number | null;
 	period: string | null;
+	ongoing?: boolean;
+	institution: string | null;
+	source_record: string;
+};
+
+// The person's own degrees, with who advised them: lets the advisor rule read the reviewer's CV too.
+export type TrainingRecord = {
+	level: string;
+	advisor_name: string | null;
+	advisor_id: string | null;
+	year: number | null;
+	period: string | null;
+	ongoing: boolean;
 	institution: string | null;
 	source_record: string;
 };
@@ -61,6 +81,10 @@ export type Curriculum = {
 	lattes_id: string;
 	lattes_url: string;
 	consulted_at: string | null;
+	source?: CurriculumSource;
+	// Names the person signs with (NOME-EM-CITACOES-BIBLIOGRAFICAS).
+	aliases?: string[];
+	lattes_updated_at?: string | null;
 	collection_status: CollectionStatus;
 	error_type: string | null;
 	error_message: string | null;
@@ -68,6 +92,7 @@ export type Curriculum = {
 	publications: PublicationRecord[];
 	projects: ProjectRecord[];
 	advising: AdvisingRecord[];
+	training?: TrainingRecord[];
 };
 
 export type Evidence = {
@@ -114,6 +139,7 @@ export type ParticipantRow = {
 	collection_error: string | null;
 	consulted_at: string | null;
 	snapshot_key: string | null;
+	upload_id: string | null;
 	warnings: CurriculumWarning[];
 };
 

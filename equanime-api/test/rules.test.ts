@@ -12,9 +12,14 @@ describe("name matching", () => {
 		expect(matchNames("Ana Santos", "Roberto Santos").match).toBe(false);
 	});
 
+	it("reads citation forms with the surname first", () => {
+		expect(matchNames("MARCACINI, R. M.", "Ricardo Marcacini").match).toBe(true);
+	});
+
 	it("rejects invalid Lattes URLs", () => {
 		expect(parseLattes("http://lattes.cnpq.br/1111111111111111").ok).toBe(true);
 		expect(parseLattes("https://example.com/1111111111111111").ok).toBe(false);
+		expect(parseLattes("https://evil-cnpq.br/1111111111111111").ok).toBe(false);
 		expect(parseLattes("http://lattes.cnpq.br/perfil").ok).toBe(false);
 	});
 });
@@ -58,6 +63,7 @@ describe("conflict rules", () => {
 describe("pdf", () => {
 	it("renders an academic report", async () => {
 		const bytes = await renderReport({
+			analysisId: "test",
 			type: "academic",
 			workTitle: "Tese",
 			candidate: { name: "João da Silva", lattesUrl: "http://lattes.cnpq.br/1111111111111111" },

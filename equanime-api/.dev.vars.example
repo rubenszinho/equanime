@@ -1,12 +1,11 @@
+# Local dev: no Access, no Workflow (POST then run the analysis from tests), fixture curricula.
 AUTH_MODE=dev
-EXECUTION_MODE=manual
+EXECUTION_MODE=inline
 COLLECTOR_MODE=fixture
 COLLECTOR_URL=http://127.0.0.1:8090
 COLLECTOR_TOKEN=
+WEB_URL=http://localhost:4321
 LLM_BASE_URL=
 LLM_MODEL=
 LLM_API_KEY=
-ACCESS_CLIENT_ID=
-ACCESS_CLIENT_SECRET=
-TEAM_DOMAIN=
-POLICY_AUD=
+OPENWEBUI_KEY=

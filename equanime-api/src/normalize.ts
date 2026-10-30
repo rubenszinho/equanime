@@ -11,7 +11,10 @@ export function fold(value: string): string {
 }
 
 export function nameTokens(value: string): string[] {
-	return fold(value)
+	// Citation form "MARCACINI, R. M." puts the surname first.
+	const [surname, given] = value.split(",", 2);
+	const ordered = given?.trim() ? `${given} ${surname}` : value;
+	return fold(ordered)
 		.split(" ")
 		.filter((token) => token.length > 0 && !PARTICLES.has(token));
 }
@@ -66,7 +69,8 @@ export function parseLattes(url: string): { ok: true; id: string } | { ok: false
 	} catch {
 		return { ok: false };
 	}
-	if (!parsed.hostname.toLowerCase().endsWith("cnpq.br")) return { ok: false };
+	const host = parsed.hostname.toLowerCase();
+	if (host !== "lattes.cnpq.br" && host !== "buscatextual.cnpq.br" && host !== "wwws.cnpq.br") return { ok: false };
 	const id = (parsed.pathname + parsed.search).match(/[0-9]{16}/)?.[0];
 	if (!id) return { ok: false };
 	return { ok: true, id };
