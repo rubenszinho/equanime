@@ -2,7 +2,7 @@ import { env, SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { asPerson } from "../src/caller";
 import { v1Person } from "../src/index";
-import { consultarAnalise, minhasAnalises } from "../src/tools";
+import { consultarAnalise, minhasAnalises, reprocessarAnalise } from "../src/tools";
 
 const run = (tool: { execute?: (...args: never[]) => unknown }, input: unknown) => (tool.execute as (input: unknown, context: unknown) => Promise<Record<string, unknown>>)(input, {});
 
@@ -35,12 +35,17 @@ describe("consultar_analise", () => {
 	it("keeps what the service decided and what is missing", async () => {
 		const result = await asPerson("ana@usp.br", () => run(consultarAnalise, { analise: "a1" }));
 		expect(result.sintese).toBe("Um possível conflito.");
-		expect(result.curriculos_para_enviar).toEqual(["Rita"]);
+		expect(result.curriculos_para_enviar).toEqual([{ nome: "Rita", lattes: "" }]);
 		expect(result.avaliadores).toEqual([{ nome: "Rita", papel: "titular", resultado: "ANÁLISE INCONCLUSIVA", regras: [
 			{ regra: "Coautoria", resultado: "Currículo não lido." },
 			{ regra: "Projetos de pesquisa em conjunto", resultado: "Currículo não lido." },
 		] }]);
 		expect(result.pdf).toBe("https://equanime.test/api/analises/a1/relatorio.pdf");
+	});
+
+	it("reprocesses with the CVs attached in the chat", async () => {
+		const result = await asPerson("ana@usp.br", () => run(reprocessarAnalise, { analise: "a1", curriculos: ["ref-1"] }));
+		expect(result.analise).toBe("a1");
 	});
 
 	it("returns the API's message instead of throwing", async () => {

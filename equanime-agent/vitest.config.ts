@@ -11,12 +11,13 @@ export default defineConfig({
 					bindings: { AGENT_KEY: "agent-key", V1_KEY_RUBRY: "rubry-key", V1_KEY_OPENWEBUI: "owui-key", WEB_URL: "https://equanime.test" },
 					// equanime-api stand-in: echoes who the tools say they act for.
 					serviceBindings: {
-						API(request: Request) {
+						async API(request: Request) {
 							const person = request.headers.get("x-equanime-person");
 							if (request.headers.get("authorization") !== "Bearer agent-key" || !person) return Response.json({ message: "Autenticação obrigatória." }, { status: 401 });
 							const url = new URL(request.url);
 							if (url.pathname === "/analises" && request.method === "GET") return Response.json({ analyses: [{ analysis_id: "a1", status: "completed", candidate_name: person, work_title: null, summary: null, web_url: null, created_at: "2026-10-30" }] });
 							if (url.pathname === "/analises/missing") return Response.json({ message: "Análise não encontrada." }, { status: 404 });
+							if (url.pathname.endsWith("/reprocessar") && JSON.stringify(await request.json()) !== '{"curriculum_refs":["ref-1"]}') return Response.json({ message: "Corpo inesperado." }, { status: 400 });
 							return Response.json({
 								analysis_id: "a1", type: "academic", status: "completed_with_warnings", message: "Concluída.", assistant_summary: "Um possível conflito.",
 								candidate: { name: "João", lattes_url: "", collection_status: "complete", collection_message: null },

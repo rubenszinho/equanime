@@ -16,6 +16,8 @@ const chat = createAgentWorker<Env>({
 	memory: (env) => env.MEMORY,
 	defaultModel: { provider: "workers-ai", model: MODEL },
 	context: today,
+	// The question carries the attachment lines (one per CV) besides what the person wrote.
+	maxQuestion: 6000,
 	scope: ({ caller }, next) => asPerson(caller.person, next),
 	onUsage: (u) => console.log(JSON.stringify({ event: "agent_usage", door: "chat", agent: u.agent, model: u.model, tokens: u.inputTokens + u.outputTokens, status: u.status })),
 });

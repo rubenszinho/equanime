@@ -65,7 +65,7 @@ export function summarize(analysis: Analysis) {
 			: [],
 		curriculos_para_enviar: [analysis.candidate, analysis.advisor, ...analysis.reviewers.map((item) => item.reviewer)]
 			.filter((person): person is Participant => Boolean(person) && person!.collection_status === "needs_upload")
-			.map((person) => person.name),
+			.map((person) => ({ nome: person.name, lattes: person.lattes_url })),
 		limitacoes: done ? analysis.limitations : [],
 		pagina: analysis.web_url,
 		pdf: web(analysis.report_url),
@@ -75,6 +75,13 @@ export function summarize(analysis: Analysis) {
 const person = z.object({
 	nome: z.string().min(3).describe("Nome como o usuário informou."),
 	lattes: z.string().describe("Endereço do Currículo Lattes: http://lattes.cnpq.br/ seguido de 16 dígitos."),
+	curriculo: z.string().optional().describe("curriculum_ref de um currículo anexado na conversa, quando o Lattes dele tem o mesmo número desta pessoa."),
+});
+
+const asPerson = (item: { nome: string; lattes: string; curriculo?: string }) => ({
+	name: item.nome,
+	lattes_url: item.lattes,
+	...(item.curriculo ? { curriculum_ref: item.curriculo } : {}),
 });
 
 async function digest(text: string): Promise<string> {
@@ -93,10 +100,10 @@ export const criarAnalise = createTool({
 	}),
 	execute: async (input) => {
 		const board = {
-			candidate: { name: input.candidato.nome, lattes_url: input.candidato.lattes },
-			...(input.orientador ? { advisor: { name: input.orientador.nome, lattes_url: input.orientador.lattes } } : {}),
+			candidate: asPerson(input.candidato),
+			...(input.orientador ? { advisor: asPerson(input.orientador) } : {}),
 			...(input.titulo_trabalho ? { work_title: input.titulo_trabalho } : {}),
-			reviewers: input.avaliadores.map((item) => ({ name: item.nome, lattes_url: item.lattes, role: item.papel })),
+			reviewers: input.avaliadores.map((item) => ({ ...asPerson(item), role: item.papel })),
 		};
 		// The same board asked twice in a conversation is the same analysis.
 		const key = await digest(JSON.stringify(board));
@@ -133,4 +140,17 @@ export const minhasAnalises = createTool({
 	},
 });
 
-export const tools = { criar_analise: criarAnalise, consultar_analise: consultarAnalise, minhas_analises: minhasAnalises };
+export const reprocessarAnalise = createTool({
+	id: "reprocessar_analise",
+	description: "Analisa de novo uma análise concluída, com currículos anexados na conversa (os curriculum_ref). Use quando a análise tiver curriculos_para_enviar e o usuário anexar esses currículos. Depois, use consultar_analise.",
+	inputSchema: z.object({
+		analise: z.string().describe("Identificador da análise."),
+		curriculos: z.array(z.string()).min(1).describe("Os curriculum_ref anexados para esta análise."),
+	}),
+	execute: async ({ analise, curriculos }) => {
+		const reply = await api<Analysis>(`/analises/${encodeURIComponent(analise)}/reprocessar`, { method: "POST", body: JSON.stringify({ curriculum_refs: curriculos }) });
+		return reply.ok ? summarize(reply.body) : { error: reply.error };
+	},
+});
+
+export const tools = { criar_analise: criarAnalise, consultar_analise: consultarAnalise, minhas_analises: minhasAnalises, reprocessar_analise: reprocessarAnalise };
