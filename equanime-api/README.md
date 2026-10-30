@@ -1,28 +1,40 @@
 # Equânime API
 
-Cloudflare Worker that accepts a board, collects Lattes curricula through a private adapter, applies deterministic conflict rules, and stores a PDF report.
+Cloudflare Worker (Hono + Zod OpenAPI) that takes a board, reads the Lattes CVs, applies
+the three conflict rules and stores a PDF. `GET /openapi.json` is what OpenWebUI imports.
+
+| Route | What |
+|---|---|
+| `POST /analises` | Start an analysis (candidate, reviewers; advisor and title optional) |
+| `GET /analises/{id}` | Status, verdicts per reviewer, evidence, limitations, `needs_upload`, `web_url` |
+| `GET /analises/{id}/relatorio.pdf` | The report |
+| `POST /analises/{id}/reprocessar` | Run again, with uploaded CVs |
+| `POST /curriculos` | Upload a Lattes XML (or the ZIP Lattes gives) |
+
+Where CVs come from (`COLLECTOR_MODE`): `http` asks equanime-collector (CNPq's institutional
+extractor), `upload` relies on users sending the XML, `fixture` uses `../fixtures/curricula.json`.
+A CV no source could read is `needs_upload`: its reviewer is inconclusive, never "no conflict".
 
 ## Local development
 
-Use Node.js 22 or newer.
+Node 24 (`export PATH=$HOME/.local/share/mise/installs/node/24.16.0/bin:$PATH`).
 
 ```bash
 npm install
-cp .dev.vars.example .dev.vars
-npm run dev
+cp .dev.vars.example .dev.vars        # AUTH_MODE=dev, fixtures, inline execution
+npx wrangler d1 migrations apply DB --local
+npx wrangler dev --port 8787
+npm run typecheck && npm test
 ```
 
-The default local mode is `AUTH_MODE=dev`, `COLLECTOR_MODE=fixture` and `EXECUTION_MODE=manual`. Start an analysis with `POST /analises`, then run the same pipeline the Workflow invokes. Production uses `EXECUTION_MODE=workflow`.
+`wrangler.jsonc` is production; tests override it in `vitest.config.ts`, local dev in `.dev.vars`.
+Run `npm run cf-typegen` after changing a binding (`worker-configuration.d.ts` is committed).
 
-```bash
-npm run typecheck
-npm test
-```
+## Auth
 
-## Production resources
+- Web users: Cloudflare Access on `equanime.rubrion.ai`; the web Worker forwards the JWT
+  (`POLICY_AUD` lists the accepted AUD tags).
+- OpenWebUI: `Authorization: Bearer <OPENWEBUI_KEY>`.
+- Each analysis, PDF and upload belongs to its caller; others get 404.
 
-Create separate staging and production D1 databases, R2 buckets and Workflows, then replace the placeholder IDs in `wrangler.jsonc`. Apply migrations with Wrangler and deploy with `--env staging` or `--env production`. Secrets (`COLLECTOR_TOKEN`, `ACCESS_CLIENT_SECRET`, `LLM_API_KEY`) are set with `wrangler secret put`, never in the config file.
-
-Human access uses Cloudflare Access JWTs. OpenWebUI uses a dedicated Access service token. The assistant instructions live in `openwebui/analise-de-banca.md`. The production checklist is `docs/cortex-validation.md`.
-
-`GET /openapi.json` is the document registered by OpenWebUI.
+Assistant prompt: `openwebui/analise-de-banca.md`. Acceptance with ICMC: `docs/cortex-validation.md`.

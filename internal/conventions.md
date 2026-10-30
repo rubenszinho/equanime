@@ -1,0 +1,20 @@
+# Conventions
+
+Same owner and habits as rubry-monorepo:
+
+- When a change is done and its checks pass: commit and push to `main` without asking. No AI attribution.
+- Ask first for outward-facing infrastructure: DNS, new paid services, creating or deleting resources.
+- Secrets never printed; stdin only; copied to Infisical.
+- Never bypass a captcha. The Lattes CV pages are captcha-gated: humans download the XML.
+- Answer in the language the owner writes in. The product UI and API texts are PT-BR.
+- Strings in `equanime-web-client/src/data/copy.ts`; OpenAPI descriptions are written for an LLM to act on.
+- Missing or partial data is never presented as "no conflict".
+- Verify UI changes in a real browser at 390px and in dark mode.
+
+## Open items
+
+- Create the Cloudflare resources and fill their IDs (`wrangler.jsonc`), Access apps, DNS/custom domains, tunnel.
+- USP/ICMC to request CNPq extractor access for `144.22.250.174`; until then `COLLECTOR_MODE=upload`.
+- Register the tool and assistant in cortex's OpenWebUI with the advisor (`equanime-api/docs/cortex-validation.md`).
+- Issue #14's deadline (30/09/2026) has passed; report status on the issue.
+- Rubry Hub listing once the repo is public.

@@ -1,24 +1,35 @@
-# Validação em cortex.icmc.usp.br
+# Validação com o OpenWebUI de cortex.icmc.usp.br
 
-A implantação de produção substitui os identificadores locais de D1, R2 e Workflow em `wrangler.jsonc` pelos recursos criados na conta institucional. O domínio público da API fica protegido por Cloudflare Access. O OpenWebUI usa um service token próprio; o cliente web encaminha o JWT do usuário por service binding.
+A API roda como Worker em `api.equanime.rubrion.ai`; o OpenWebUI de produção do ICMC
+(`cortex.icmc.usp.br`) a registra pela URL do `openapi.json`. O coletor do extrator
+institucional do CNPq roda em servidor da Rubrion com IP fixo.
 
-## Preparação
+O item da issue "O serviço OpenAPI é instalado no ambiente cortex.icmc.usp.br" é atendido
+pelo registro da ferramenta no OpenWebUI de cortex. Se o ICMC exigir execução nas próprias
+máquinas, o coletor (imagem Docker) pode rodar lá; a API precisaria de `workerd` ou de uma
+conta Cloudflare do ICMC. Combinar com o orientador.
 
-1. Criar D1 `equanime-production`, R2 `equanime-evidence-production` e aplicar `migrations/`.
-2. Publicar o coletor privado e gravar `COLLECTOR_URL` e `COLLECTOR_TOKEN` como variável e segredo do Worker.
-3. Gravar `TEAM_DOMAIN`, `POLICY_AUD`, `ACCESS_CLIENT_ID` e o segredo `ACCESS_CLIENT_SECRET`.
-4. Configurar o modelo interno, se usado, em `LLM_BASE_URL`, `LLM_MODEL` e `LLM_API_KEY`. As regras continuam sem o modelo.
-5. Publicar `equanime-api` com `--env production` e `equanime-web-client` com o service binding `EQUANIME_API`.
-6. Proteger o hostname da API e o cliente com Access. A política da API permite usuários institucionais e o service token do OpenWebUI.
+## Pré-requisitos
 
-## Aceite operacional
+1. Recursos Cloudflare criados (D1 `equanime`, R2 `equanime-evidence`, Workflow), IDs em `wrangler.jsonc`, `npx wrangler d1 migrations apply DB --remote`.
+2. Access em `equanime.rubrion.ai` (usuários do ICMC por e-mail) e seu AUD em `POLICY_AUD`.
+3. Segredos do Worker: `OPENWEBUI_KEY`, `COLLECTOR_TOKEN`, `COLLECTOR_ACCESS_SECRET`, `LLM_API_KEY`. Também no Infisical (`/equanime`).
+4. Coletor no ar (`~/rubrion/infra/instances/oracle-rubrion-1/equanime-collector`).
+5. **Autorização do CNPq**: a USP pede ao CNPq acesso do IP `144.22.250.174` ao extrator de currículos (WSCurriculo). Enquanto não houver, `COLLECTOR_MODE=upload` e os usuários enviam o XML pela aplicação web.
 
-- `GET /health` e `GET /ready` respondem no ambiente.
-- O OpenWebUI importa `https://<api>/openapi.json` com o service token.
-- O assistente em `openwebui/analise-de-banca.md` conduz uma banca acadêmica e uma banca de concurso.
-- A coleta registra data, status e falha parcial sem transformar falha em ausência de conflito.
-- Coautoria, orientação dos últimos cinco anos e projeto conjunto aparecem com evidência e no PDF.
-- Logs e traces correlacionam `analysis_id`, tempos, regras, modelo e erros.
-- A retenção diária remove análises e objetos além de `RETENTION_DAYS`.
+## Registro no OpenWebUI de cortex (com o orientador)
 
-A entrega institucional só está completa depois desse ensaio com o orientador, incluindo acesso, configuração e validação no ambiente.
+1. Admin → Settings → Tools → adicionar Tool Server OpenAPI: `https://api.equanime.rubrion.ai/openapi.json`, autenticação Bearer com a `OPENWEBUI_KEY`.
+2. Workspace → Models → novo modelo **Análise de Banca**, prompt de sistema = `openwebui/analise-de-banca.md`, ferramenta habilitada.
+
+## Roteiro de aceite
+
+- [ ] `GET /health` e `GET /ready` respondem 200.
+- [ ] O OpenWebUI importa o `openapi.json` e lista `POST /analises`, `GET /analises/{analysis_id}`, `GET /analises/{analysis_id}/relatorio.pdf`, `POST /analises/{analysis_id}/reprocessar`.
+- [ ] Banca acadêmica descrita em linguagem natural (exemplo da issue, com titulares e suplentes): o assistente chama a ferramenta, acompanha o estado e responde com a síntese.
+- [ ] Banca de concurso (sem orientador): a regra de orientação não é executada.
+- [ ] Coautoria, orientação nos últimos cinco anos e projeto conjunto aparecem com evidência na resposta e no PDF.
+- [ ] Currículo não lido: avaliador ANÁLISE INCONCLUSIVA, `needs_upload` e `web_url`; envio do XML na aplicação web e nova análise resolvem.
+- [ ] O PDF abre a partir da conversa, com acentos, tipo de banca, participantes, evidências, limitações e data.
+- [ ] Observabilidade (Workers Logs): `analysis_created`, `analysis_completed` com tempos, regras, contagem de currículos e conflitos; `llm_call` com o modelo.
+- [ ] Retenção: o cron diário remove análises, currículos e PDFs com mais de `RETENTION_DAYS` (90).

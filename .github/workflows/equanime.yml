@@ -7,6 +7,7 @@ on:
       - "equanime-api/**"
       - "equanime-collector/**"
       - "equanime-web-client/**"
+      - "fixtures/**"
       - ".github/workflows/equanime.yml"
 
 jobs:
@@ -23,9 +24,11 @@ jobs:
           cache: npm
           cache-dependency-path: equanime-api/package-lock.json
       - run: npm ci
+      - name: Generated binding types match wrangler.jsonc
+        run: npm run cf-typegen && git diff --exit-code worker-configuration.d.ts
       - run: npm run typecheck
       - run: npm test
-      - run: npx wrangler deploy --dry-run --env=""
+      - run: npx wrangler deploy --dry-run
 
   collector:
     runs-on: ubuntu-latest
@@ -53,6 +56,8 @@ jobs:
           cache: npm
           cache-dependency-path: equanime-web-client/package-lock.json
       - run: npm ci
+      - name: Generated binding types match wrangler.jsonc
+        run: npx wrangler types && git diff --exit-code worker-configuration.d.ts
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
