@@ -36,7 +36,7 @@ Order: equanime-api (`npx wrangler d1 migrations apply DB --remote`, then `npx w
 | R2 | `equanime-evidence` |
 | Workflow | `equanime-analysis` (created by the API deploy) |
 | Workers | `equanime-api` on `api.equanime.rubrion.ai` (no Access; Bearer or forwarded JWT), `equanime-web-client` on `equanime.rubrion.ai` |
-| Access app "Equânime" | `equanime.rubrion.ai`, one-time PIN; policies Owner and USP (`@usp.br`, `@icmc.usp.br`); AUD in `POLICY_AUD` |
+| Access app "Equânime" | `equanime.rubrion.ai`, login by email code or Google (IdP "Google — Equânime", OAuth client in GCP project `rubrion`, credentials in Infisical `/cloudflare-access-google`); policies Owner and USP (`@usp.br`, `@icmc.usp.br`); AUD in `POLICY_AUD` |
 | Access app "Equânime collector" | `equanime-collector.rubrion.ai`, service token `equanime-api` only (expires 2027-10-30) |
 | Tunnel | `equanime-collector-prod` (`10126536-499d-4e20-90e7-61912b3f6145`), remotely managed, ingress → `http://collector:8090`, proxied CNAME |
 
