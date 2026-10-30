@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { owns, type Actor } from "../auth";
 import { parseLattes, canonicalJson, deterministicId, sha256 } from "../normalize";
-import { attachUpload, countRecent, findByIdempotency, getAnalysis, getUpload, insertAnalysis, insertParticipant, listParticipants, resetAnalysis } from "../repository";
+import { attachUpload, countRecent, findByIdempotency, getAnalysis, getUpload, insertAnalysis, insertParticipant, listByActor, listParticipants, resetAnalysis } from "../repository";
 import { runAnalysis } from "../pipeline";
 import { presentAnalysis } from "../present";
-import { AnalysisSchema, CreateAnalysisSchema, ErrorSchema, ReprocessSchema } from "../schemas";
+import { AnalysisListSchema, AnalysisSchema, CreateAnalysisSchema, ErrorSchema, ReprocessSchema } from "../schemas";
 import { logError, logInfo } from "../log";
 import { envString } from "../settings";
 
@@ -33,6 +33,17 @@ const createRouteDef = createRoute({
 		409: { description: "A chave de idempotência foi reutilizada com dados diferentes.", content: { "application/json": { schema: ErrorSchema } } },
 		429: { description: "Limite de análises do solicitante foi atingido.", content: { "application/json": { schema: ErrorSchema } } },
 		404: { description: "A análise registrada não pôde ser relida.", content: { "application/json": { schema: ErrorSchema } } },
+	},
+});
+
+const listRouteDef = createRoute({
+	method: "get",
+	path: "/analises",
+	tags: ["Análises"],
+	summary: "Lista as análises do solicitante",
+	description: "Use quando o usuário pedir as análises que já fez. Retorna as 20 mais recentes, da mais nova para a mais antiga, com estado e resumo. Para o resultado completo de uma delas, consulte GET /analises/{analysis_id}.",
+	responses: {
+		200: { description: "Análises do solicitante.", content: { "application/json": { schema: AnalysisListSchema } } },
 	},
 });
 
@@ -167,6 +178,23 @@ analysisRoutes.openapi(createRouteDef, async (c) => {
 	const created = await presentAnalysis(c.env, id);
 	if (!created) return c.json(notFound, 404);
 	return c.json(created, 202);
+});
+
+analysisRoutes.openapi(listRouteDef, async (c) => {
+	const web = envString(c.env, "WEB_URL").replace(/\/$/, "");
+	const rows = await listByActor(c.env.DB, c.get("actor").id, 20);
+	return c.json({
+		analyses: rows.map((row) => ({
+			analysis_id: row.id,
+			type: row.type,
+			status: row.status,
+			candidate_name: row.candidate_name,
+			work_title: row.work_title,
+			summary: row.summary_json ? JSON.parse(row.summary_json) : null,
+			web_url: web ? `${web}/analises/${row.id}` : null,
+			created_at: row.created_at,
+		})),
+	}, 200);
 });
 
 analysisRoutes.openapi(getRouteDef, async (c) => {

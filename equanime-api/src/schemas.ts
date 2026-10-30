@@ -159,6 +159,23 @@ export const AnalysisSchema = z
 	})
 	.openapi("Analysis");
 
+export const AnalysisListSchema = z
+	.object({
+		analyses: z.array(
+			z.object({
+				analysis_id: z.string(),
+				type: z.enum(["academic", "selection"]),
+				status: z.string(),
+				candidate_name: z.string().nullable(),
+				work_title: z.string().nullable(),
+				summary: AnalysisSchema.shape.summary,
+				web_url: z.string().nullable(),
+				created_at: z.string(),
+			}),
+		),
+	})
+	.openapi("AnalysisList");
+
 export const ErrorSchema = z
 	.object({
 		status: z.literal("error"),

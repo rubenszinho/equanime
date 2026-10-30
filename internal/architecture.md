@@ -3,7 +3,8 @@
 | Part | What | Runs on |
 |---|---|---|
 | `equanime-api/` | Hono + Zod OpenAPI Worker: analyses, rules, PDF, uploads | Cloudflare, `api.equanime.rubrion.ai` |
-| `equanime-web-client/` | Astro + React site, PT-BR; proxies `/api/*` to the API by service binding | Cloudflare, `equanime.rubrion.ai` (behind Access) |
+| `equanime-web-client/` | Astro + React site, PT-BR; proxies `/api/*` to the API by service binding; the floating assistant (agent-kit) at `/api/agent/*` | Cloudflare, `equanime.rubrion.ai` (behind Access) |
+| `equanime-agent/` | The "Análise de Banca" agent (Mastra, Workers AI Gemma): agent-kit routes for the web chat (service binding only) and an OpenAI-compatible `/v1` | Cloudflare, `agent.equanime.rubrion.ai` (`/v1` only) |
 | `equanime-collector/` | FastAPI: CNPq's institutional Lattes extractor, SQLite job queue | Docker on oracle-rubrion-1, tunnel `equanime-collector.rubrion.ai` (Access service token) |
 
 ## An analysis
@@ -38,7 +39,28 @@ Optional, only for ambiguous name pairs (`src/llm.ts`), OpenAI-compatible:
 (`https://brad-gateway.rubrion.ai/openai/v1/<workspace>`, model `brad`), as would the
 Agents4Gov models at ICMC. A failure never fails the rules; calls are logged in `model_calls`.
 
+## The agent
+
+`equanime-agent` holds one agent (`src/agent.ts`) and three tools (`src/tools.ts`:
+`criar_analise`, `consultar_analise`, `minhas_analises`) that call the API through the
+`API` service binding with `Bearer AGENT_KEY` and `X-Equanime-Person`. The API trusts that
+header only with the key (`src/auth.ts`), so an analysis started in a chat belongs to the
+same person as in the web pages. Who the person is (`src/caller.ts`, AsyncLocalStorage):
+
+| Door | Person |
+|---|---|
+| Web chat (`/api/agent/*` → gateway → service binding) | the Access email, checked again by the web Worker (`src/lib/access.ts`) |
+| `/v1` with `V1_KEY_RUBRY` (rubry.ai) | `rubry:<pseudonym>` from `X-Equanime-Person` (a hash; rubry.ai never sends its account id) |
+| `/v1` with `V1_KEY_OPENWEBUI` | `openwebui:<email>` when OpenWebUI forwards user headers, else `service:openwebui` |
+
+The web chat keeps conversations in D1 `equanime-agent-memory` (Mastra Memory, 50 per
+person); `/v1` is stateless (clients send the conversation). The widget is one React island
+(`components/Assistant.tsx`): the floating `ChatBox` and the expanded `AssistantScreen`
+(`#assistente`) share one `AgentProvider`, so expanding keeps an answer arriving. Its
+Tailwind is limited to the kit (`styles/agent.css`); the site's CSS sits in `@layer site`.
+
 ## Rubry
 
-A sibling product: own identity and repo, no shared accounts or credit. Listed in the
-Rubry Hub as a community agent once the repo is public.
+A sibling product: own identity and repo, no shared accounts or credit. In rubry.ai's chat
+like Brad (an entry in rubry-agent's registry calling `/v1`); in the Rubry Hub as a
+community agent once the repo is public.

@@ -1,0 +1,24 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "equanime-agent",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-14",
+	// Mastra calls createRequire(import.meta.url) at load; the new module registry makes it real.
+	// node:async_hooks carries the person to the tools.
+	"compatibility_flags": ["nodejs_compat", "new_module_registry"],
+	"workers_dev": false,
+	"preview_urls": false,
+	// Public only for /v1 (rubry.ai, OpenWebUI); the web app's chat comes through its service binding.
+	"routes": [{ "pattern": "agent.equanime.rubrion.ai", "custom_domain": true }],
+	"observability": { "enabled": true, "logs": { "enabled": true, "head_sampling_rate": 1 } },
+	"vars": {
+		"PUBLIC_HOST": "agent.equanime.rubrion.ai",
+		"WEB_URL": "https://equanime.rubrion.ai"
+	},
+	"ai": { "binding": "AI" },
+	"services": [{ "binding": "API", "service": "equanime-api" }],
+	"d1_databases": [
+		// Mastra Memory: the web chat's conversations (tables created on first use).
+		{ "binding": "MEMORY", "database_name": "equanime-agent-memory", "database_id": "d1b0234f-6f0e-4fd6-94ac-70a742744c07" }
+	]
+}

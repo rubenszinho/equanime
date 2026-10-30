@@ -30,6 +30,7 @@ export const authenticate: MiddlewareHandler<{ Bindings: CloudflareBindings; Var
 		bearer: c.req.header("authorization")?.replace(/^Bearer\s+/i, ""),
 		clientId: c.req.header("cf-access-client-id") ?? "",
 		clientSecret: c.req.header("cf-access-client-secret") ?? "",
+		person: c.req.header("x-equanime-person"),
 	});
 	if (!actor) return c.json({ status: "error", error_type: "unauthorized", message: "Autenticação obrigatória: Cloudflare Access ou a chave da integração." }, 401);
 	c.set("actor", actor);
@@ -38,8 +39,17 @@ export const authenticate: MiddlewareHandler<{ Bindings: CloudflareBindings; Var
 	await next();
 };
 
-async function identify(env: CloudflareBindings, request: { jwt?: string; bearer?: string; clientId: string; clientSecret: string }): Promise<Actor | null> {
+// Emails, "rubry:<id>", "openwebui:<email>" or "service:<name>".
+const PERSON = /^[a-z0-9][a-z0-9@._:+-]{2,199}$/;
+
+async function identify(env: CloudflareBindings, request: { jwt?: string; bearer?: string; clientId: string; clientSecret: string; person?: string }): Promise<Actor | null> {
 	if (envString(env, "AUTH_MODE") === "dev") return { id: "development", kind: "development" };
+	// The Equânime agent acts for the person it is talking to; the header counts only with its key.
+	if (request.bearer && env.AGENT_KEY && safeEqual(request.bearer, env.AGENT_KEY)) {
+		const person = request.person?.trim().toLowerCase() ?? "";
+		if (!PERSON.test(person)) return null;
+		return { id: person, kind: person.startsWith("service:") ? "service" : "user" };
+	}
 	// OpenWebUI tool servers send a Bearer key, not Access headers. All its users share this actor.
 	if (request.bearer && env.OPENWEBUI_KEY && safeEqual(request.bearer, env.OPENWEBUI_KEY)) return { id: "service:openwebui", kind: "service" };
 	const teamDomain = envString(env, "TEAM_DOMAIN").replace(/\/$/, "");

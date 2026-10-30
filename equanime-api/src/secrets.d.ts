@@ -4,6 +4,7 @@ interface CloudflareBindings {
 	LLM_API_KEY?: string;
 	ACCESS_CLIENT_SECRET?: string;
 	OPENWEBUI_KEY?: string;
+	AGENT_KEY?: string;
 }
 
 declare module "*.ttf" {

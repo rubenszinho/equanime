@@ -153,4 +153,31 @@ describe("analysis API", () => {
 		expect((await call(`/analises/${other.analysis_id}`, { headers: { authorization: "Bearer integration-key" } })).status).toBe(404);
 		expect((await call(`/analises/${other.analysis_id}/relatorio.pdf`, { headers: { authorization: "Bearer integration-key" } })).status).toBe(404);
 	});
+
+	it("lets the agent act for the person it talks to, and lists their analyses", async () => {
+		const app = createApp();
+		const secured = { ...env, AUTH_MODE: "access", AGENT_KEY: "agent-key", POLICY_AUD: "" } as CloudflareBindings;
+		const call = async (path: string, init: RequestInit = {}) => {
+			const ctx = createExecutionContext();
+			const response = await app.fetch(new Request(`https://equanime.test${path}`, init), secured, ctx);
+			await waitOnExecutionContext(ctx);
+			return response;
+		};
+		const as = (person?: string, key = "agent-key") => ({ "content-type": "application/json", authorization: `Bearer ${key}`, ...(person ? { "x-equanime-person": person } : {}) });
+		// The person header means nothing without the agent's key, and the key needs a person.
+		expect((await call("/analises", { headers: as("ana@usp.br", "wrong") })).status).toBe(401);
+		expect((await call("/analises", { headers: as() })).status).toBe(401);
+		expect((await call("/analises", { headers: as("not a person") })).status).toBe(401);
+		const created = await call("/analises", { method: "POST", headers: as("Ana@USP.br"), body: JSON.stringify(academic) });
+		expect(created.status).toBe(202);
+		const { analysis_id } = await created.json<{ analysis_id: string }>();
+		const mine = await (await call("/analises", { headers: as("ana@usp.br") })).json<{ analyses: Array<{ analysis_id: string; candidate_name: string; web_url: string }> }>();
+		expect(mine.analyses.map((item) => item.analysis_id)).toEqual([analysis_id]);
+		expect(mine.analyses[0].candidate_name).toBe("João da Silva");
+		expect(mine.analyses[0].web_url).toBe(`https://equanime.test/analises/${analysis_id}`);
+		expect((await call(`/analises/${analysis_id}`, { headers: as("ana@usp.br") })).status).toBe(200);
+		// Another person through the same agent sees nothing of Ana's.
+		expect((await call(`/analises/${analysis_id}`, { headers: as("rubry:visitor-1") })).status).toBe(404);
+		expect((await (await call("/analises", { headers: as("rubry:visitor-1") })).json<{ analyses: unknown[] }>()).analyses).toEqual([]);
+	});
 });

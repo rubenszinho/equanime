@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - "equanime-api/**"
+      - "equanime-agent/**"
       - "equanime-collector/**"
       - "equanime-web-client/**"
       - "fixtures/**"
@@ -29,6 +30,25 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npx wrangler deploy --dry-run
+
+  agent:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: equanime-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: equanime-agent/package-lock.json
+      - run: npm ci
+      - name: Generated binding types match wrangler.jsonc
+        run: npx wrangler types && git diff --exit-code worker-configuration.d.ts
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npx wrangler deploy --dry-run --minify
 
   collector:
     runs-on: ubuntu-latest

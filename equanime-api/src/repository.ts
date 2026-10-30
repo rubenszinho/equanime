@@ -60,6 +60,14 @@ export async function getAnalysis(db: D1Database, id: string): Promise<AnalysisR
 	return row ? mapAnalysis(row) : null;
 }
 
+export async function listByActor(db: D1Database, actor: string, limit: number): Promise<Array<AnalysisRecord & { candidate_name: string | null }>> {
+	const { results } = await db
+		.prepare("SELECT a.*, (SELECT requested_name FROM participants p WHERE p.analysis_id = a.id AND p.kind = 'candidate') AS candidate_name FROM analyses a WHERE a.actor = ? ORDER BY a.created_at DESC LIMIT ?")
+		.bind(actor, limit)
+		.all<AnalysisRecord & { candidate_name: string | null }>();
+	return results;
+}
+
 export async function countRecent(db: D1Database, actor: string, since: string): Promise<number> {
 	const row = await db.prepare("SELECT COUNT(*) AS n FROM analyses WHERE actor = ? AND created_at >= ?").bind(actor, since).first<{ n: number }>();
 	return row?.n ?? 0;
