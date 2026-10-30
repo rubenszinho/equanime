@@ -28,13 +28,25 @@ API `npm run typecheck && npm test`; collector `.venv/bin/pytest`; web `npm test
 
 Order: equanime-api (`npx wrangler d1 migrations apply DB --remote`, then `npx wrangler deploy`), then equanime-web-client (`npm run deploy`). Collector: `~/rubrion/infra/instances/oracle-rubrion-1/equanime-collector/README.md`.
 
+## Cloudflare resources (created 2026-10-30)
+
+| What | Name / id |
+|---|---|
+| D1 | `equanime` (`cdb6fe43-ed73-474a-9469-7af6366f04b6`, enam) |
+| R2 | `equanime-evidence` |
+| Workflow | `equanime-analysis` (created by the API deploy) |
+| Workers | `equanime-api` on `api.equanime.rubrion.ai` (no Access; Bearer or forwarded JWT), `equanime-web-client` on `equanime.rubrion.ai` |
+| Access app "Equânime" | `equanime.rubrion.ai`, one-time PIN; policies Owner and USP (`@usp.br`, `@icmc.usp.br`); AUD in `POLICY_AUD` |
+| Access app "Equânime collector" | `equanime-collector.rubrion.ai`, service token `equanime-api` only (expires 2027-10-30) |
+| Tunnel | `equanime-collector-prod` (`10126536-499d-4e20-90e7-61912b3f6145`), remotely managed, ingress → `http://collector:8090`, proxied CNAME |
+
 ## Secrets
 
 Never printed; through stdin (`printf '%s' "$V" | npx wrangler secret put NAME`); also in Infisical (`rubry` project, folder `/equanime`).
 
 | Where | Secrets |
 |---|---|
-| equanime-api | `OPENWEBUI_KEY`, `COLLECTOR_TOKEN`, `COLLECTOR_ACCESS_SECRET`, `LLM_API_KEY` |
+| equanime-api | `OPENWEBUI_KEY`, `COLLECTOR_TOKEN`, `COLLECTOR_ACCESS_SECRET` (set straight from the token creation; only in the Worker, rotate the service token to copy it), `LLM_API_KEY` (not set yet) |
 | collector `.env` | `EQUANIME_COLLECTOR_TOKEN` (= `COLLECTOR_TOKEN`), `TUNNEL_TOKEN` |
 
 ## After a deploy

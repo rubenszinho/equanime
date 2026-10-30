@@ -20,9 +20,11 @@
 		"AUTH_MODE": "access",
 		"EXECUTION_MODE": "workflow",
 		// http: CNPq's institutional extractor through equanime-collector; upload: users send the XML.
-		"COLLECTOR_MODE": "http",
+		// upload until CNPq authorizes the collector's IP; then http.
+		"COLLECTOR_MODE": "upload",
 		"COLLECTOR_URL": "https://equanime-collector.rubrion.ai",
-		"COLLECTOR_ACCESS_ID": "",
+		// Access service token "equanime-api" (expires 2027-10-30); its secret is COLLECTOR_ACCESS_SECRET.
+		"COLLECTOR_ACCESS_ID": "7e587ca93589b6aa001b731fad18cc75.access",
 		"WEB_URL": "https://equanime.rubrion.ai",
 		"LLM_BASE_URL": "",
 		"LLM_MODEL": "",
@@ -31,14 +33,14 @@
 		"RETENTION_DAYS": "90",
 		"TEAM_DOMAIN": "https://rubrion.cloudflareaccess.com",
 		// Comma-separated AUD tags: the web app's Access application (and the API's, if it gets one).
-		"POLICY_AUD": "",
+		"POLICY_AUD": "52c8e31d91b80da17ecca375adc8050784e2fca741a661b9b60e198641c88a61",
 		"ACCESS_CLIENT_ID": ""
 	},
 	"d1_databases": [
 		{
 			"binding": "DB",
 			"database_name": "equanime",
-			"database_id": "00000000-0000-0000-0000-000000000001",
+			"database_id": "cdb6fe43-ed73-474a-9469-7af6366f04b6",
 			"migrations_dir": "migrations"
 		}
 	],

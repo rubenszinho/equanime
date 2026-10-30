@@ -13,8 +13,9 @@ Same owner and habits as rubry-monorepo:
 
 ## Open items
 
-- Create the Cloudflare resources and fill their IDs (`wrangler.jsonc`), Access apps, DNS/custom domains, tunnel.
-- USP/ICMC to request CNPq extractor access for `144.22.250.174`; until then `COLLECTOR_MODE=upload`.
+- Deploy the collector on oracle-rubrion-1 (tunnel `equanime-collector-prod` exists, no connector yet).
+- USP/ICMC to request CNPq extractor access for `144.22.250.174`; production runs `COLLECTOR_MODE=upload` until then.
+- LLM for ambiguous names: set `LLM_BASE_URL`/`LLM_MODEL` and the `LLM_API_KEY` secret (Brad workspace).
 - Register the tool and assistant in cortex's OpenWebUI with the advisor (`equanime-api/docs/cortex-validation.md`).
 - Issue #14's deadline (30/09/2026) has passed; report status on the issue.
 - Rubry Hub listing once the repo is public.
