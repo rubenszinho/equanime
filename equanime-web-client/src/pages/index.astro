@@ -1,25 +1,101 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import Sheet from "../components/Sheet.astro";
+import Verdict from "../components/Verdict";
+import { home, results } from "../data/copy";
 ---
 
-<Layout>
-	<section class="hero">
-		<p class="muted">Verificação de conflito de interesses</p>
-		<h1>Evidências para compor uma banca com mais clareza.</h1>
-		<p>
-			A Equânime consulta os Currículos Lattes informados, compara coautorias, orientações recentes e projetos comuns,
-			e devolve um relatório que uma pessoa pode conferir antes da decisão.
-		</p>
-		<p><a class="button" href="/analises/nova">Iniciar análise</a></p>
+<Layout title={home.title}>
+	<section class="wrap hero">
+		<div class="pitch">
+			<h1>{home.headline}</h1>
+			<p class="lead">{home.lead}</p>
+			<p class="actions">
+				<a class="btn btn--primary" href="/analises/nova">{home.start}</a>
+				<a class="btn btn--quiet" href="#como-funciona">{home.how}</a>
+			</p>
+		</div>
+		<Sheet />
 	</section>
-	<section class="grid">
-		<article class="card">
-			<h2>Banca acadêmica</h2>
-			<p>Com orientador, a análise inclui a relação de orientação nos últimos cinco anos.</p>
-		</article>
-		<article class="card">
-			<h2>Concurso ou seleção</h2>
-			<p>Sem orientador, permanecem a coautoria e a participação conjunta em projetos.</p>
-		</article>
+
+	<section class="wrap band" id="como-funciona">
+		<h2>{home.stepsTitle}</h2>
+		<ol class="steps">
+			{home.steps.map((step) => (
+				<li><h3>{step.title}</h3><p class="soft">{step.body}</p></li>
+			))}
+		</ol>
+	</section>
+
+	<section class="wrap band">
+		<div>
+			<h2>{home.rulesTitle}</h2>
+			<p class="soft side">{home.rulesLead}</p>
+		</div>
+		<dl class="rules">
+			{home.rules.map((rule) => (
+				<div><dt>{rule.title}</dt><dd class="soft">{rule.body}</dd></div>
+			))}
+		</dl>
+	</section>
+
+	<section class="wrap band">
+		<h2>{home.resultsTitle}</h2>
+		<dl class="results">
+			{(Object.keys(results) as Array<keyof typeof results>).map((status) => (
+				<div><dt><Verdict status={status} /></dt><dd class="soft">{home.results[status]}</dd></div>
+			))}
+		</dl>
+	</section>
+
+	<section class="wrap band">
+		<h2>{home.namesTitle}</h2>
+		<p class="soft">{home.namesBody}</p>
+	</section>
+
+	<section class="wrap band">
+		<h2>{home.dataTitle}</h2>
+		<ul class="data">
+			{home.data.map((item) => <li>{item}</li>)}
+		</ul>
+	</section>
+
+	<section class="wrap band">
+		<h2>{home.chatTitle}</h2>
+		<div class="chat">
+			<p class="soft">{home.chatBody}</p>
+			<p><a class="btn btn--primary" href="/analises/nova">{home.start}</a></p>
+		</div>
 	</section>
 </Layout>
+
+<style>
+	.hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: center; padding-block: clamp(2rem, 7vw, 5.5rem) clamp(3rem, 8vw, 6rem); }
+	.pitch { display: grid; gap: 1.5rem; }
+	.lead { font-size: 1.15rem; color: var(--ink-soft); max-width: 46ch; }
+	.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+	/* Sections: the heading on the left, the content on the right. */
+	.band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 1.25rem clamp(2rem, 5vw, 4rem); padding-block: 3rem; border-top: 1px solid var(--hair); }
+	.side { margin-top: 0.9rem; font-size: 0.95rem; }
+
+	.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; counter-reset: step; }
+	.steps li { display: grid; gap: 0.5rem; align-content: start; counter-increment: step; }
+	.steps li::before { content: counter(step); font: 500 2.4rem/1 var(--font-display); color: var(--stamp); }
+
+	.rules, .results { margin: 0; display: grid; gap: 0; }
+	.rules div, .results div { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 0.5rem 2rem; padding-block: 1rem; border-bottom: 1px solid var(--rule); }
+	.rules div:first-child, .results div:first-child { padding-top: 0; }
+	dt { font-weight: 650; }
+	dd { margin: 0; }
+
+	.data { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.6rem; max-width: var(--measure); }
+	.data li::marker { color: var(--stamp); }
+	.chat { display: grid; gap: 1.25rem; }
+
+	@media (max-width: 880px) {
+		.hero, .band { grid-template-columns: 1fr; }
+		.steps { grid-template-columns: 1fr; gap: 1.5rem; }
+		.rules div, .results div { grid-template-columns: 1fr; }
+	}
+</style>

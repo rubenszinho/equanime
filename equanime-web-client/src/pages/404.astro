@@ -1,0 +1,16 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { notFound } from "../data/copy";
+---
+
+<Layout title={`${notFound.title} | Equânime`}>
+	<section class="wrap lost">
+		<h1>{notFound.title}</h1>
+		<p class="soft">{notFound.body}</p>
+		<p><a class="btn btn--primary" href="/">{notFound.home}</a></p>
+	</section>
+</Layout>
+
+<style>
+	.lost { display: grid; gap: 1.25rem; padding-block: 5rem; }
+</style>

@@ -3,12 +3,18 @@ import { env } from "cloudflare:workers";
 
 export const prerender = false;
 
+// Only the API's own routes go through; the browser never reaches other paths.
+const allowed = /^(analises(\/[0-9a-z-]+(\/(relatorio\.pdf|reprocessar))?)?|curriculos)$/;
+
 export const ALL: APIRoute = async ({ request, params }) => {
 	const segments = params.path;
 	const path = Array.isArray(segments) ? segments.join("/") : segments ?? "";
+	if (!allowed.test(path)) return Response.json({ status: "error", error_type: "not_found", message: "Rota não encontrada." }, { status: 404 });
 	const incoming = new URL(request.url);
 	const headers = new Headers(request.headers);
 	headers.delete("host");
+	// Access already turned the session cookie into Cf-Access-Jwt-Assertion; the API needs nothing else.
+	headers.delete("cookie");
 	const body = request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer();
 	const init: RequestInit = { method: request.method, headers, body };
 	const base = String(env.EQUANIME_API_URL ?? "");

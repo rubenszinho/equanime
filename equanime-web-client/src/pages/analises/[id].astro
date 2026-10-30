@@ -3,11 +3,15 @@ export const prerender = false;
 
 import Layout from "../../layouts/Layout.astro";
 import AnalysisView from "../../components/AnalysisView";
+import { view } from "../../data/copy";
+import "../../styles/app.css";
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect("/analises/nova");
 ---
 
-<Layout>
-	<AnalysisView client:load analysisId={id} />
+<Layout title={`${view.pageTitle} | Equânime`}>
+	<section class="wrap page">
+		<AnalysisView client:load analysisId={id} />
+	</section>
 </Layout>

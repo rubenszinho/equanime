@@ -1,0 +1,28 @@
+---
+// The theme, set before first paint: the visitor's choice, else the device's.
+---
+
+<script is:inline>
+	(function () {
+		var root = document.documentElement;
+		var dark = matchMedia("(prefers-color-scheme: dark)");
+		var chosen = null;
+		try {
+			chosen = localStorage.getItem("equanime-theme");
+		} catch (e) {}
+		function apply(theme) {
+			root.dataset.theme = theme;
+			var meta = document.querySelector('meta[name="theme-color"]');
+			if (meta) meta.setAttribute("content", theme === "dark" ? "#0f1828" : "#f2f4f6");
+		}
+		apply(chosen || (dark.matches ? "dark" : "light"));
+		dark.addEventListener("change", function (e) {
+			var c = null;
+			try {
+				c = localStorage.getItem("equanime-theme");
+			} catch (err) {}
+			if (!c) apply(e.matches ? "dark" : "light");
+		});
+		window.equanimeTheme = apply;
+	})();
+</script>

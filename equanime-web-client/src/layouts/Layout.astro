@@ -1,25 +1,72 @@
 ---
 import "../styles/global.css";
+import Mark from "../components/Mark.astro";
+import Theme from "../components/Theme.astro";
+import { site } from "../data/copy";
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const { title, description = site.description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 ---
 
 <!doctype html>
 <html lang="pt-BR">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="theme-color" content="#f2f4f6" />
+		<Theme />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
+		<meta property="og:locale" content="pt_BR" />
+		<meta property="og:url" content={canonical.href} />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Equânime</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;650;700&family=Spectral:ital,wght@0,500;0,600;1,500&display=swap" />
 	</head>
 	<body>
-		<header>
-			<a href="/"><strong>Equânime</strong></a>
-			<nav>
-				<a href="/analises/nova">Nova análise</a>
+		<header class="wrap top">
+			<a class="brand" href="/"><Mark />{site.name}</a>
+			<nav aria-label="Principal">
+				<a class="how" href="/#como-funciona">{site.nav.how}</a>
+				<button type="button" class="theme" data-theme-toggle data-dark={site.nav.dark} data-light={site.nav.light} aria-label={site.nav.dark} title={site.nav.dark}>
+					<svg class="theme__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>
+					<svg class="theme__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+				</button>
+				<a class="btn btn--primary btn--small" href="/analises/nova">{site.nav.start}</a>
 			</nav>
 		</header>
 		<main>
 			<slot />
 		</main>
+		<footer class="wrap foot">
+			<span>{site.name}: apoio à decisão para bancas.</span>
+			<a href={site.byUrl}>{site.by}</a>
+		</footer>
+		<script>
+			const toggles = [...document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]")];
+			const label = () => toggles.forEach((button) => {
+				const text = document.documentElement.dataset.theme === "dark" ? button.dataset.light! : button.dataset.dark!;
+				button.setAttribute("aria-label", text);
+				button.title = text;
+			});
+			label();
+			toggles.forEach((button) => button.addEventListener("click", () => {
+				const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+				try {
+					localStorage.setItem("equanime-theme", next);
+				} catch {}
+				(window as unknown as { equanimeTheme(theme: string): void }).equanimeTheme(next);
+				label();
+			}));
+		</script>
 	</body>
 </html>
