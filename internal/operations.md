@@ -42,7 +42,7 @@ Order: equanime-api (`npx wrangler d1 migrations apply DB --remote`, then `npx w
 
 ## Secrets
 
-Never printed; through stdin (`printf '%s' "$V" | npx wrangler secret put NAME`); also in Infisical (project `Equanime`, slug `equanime-ji3-a`, env `prod`, folder `/equanime-api`: `OPENWEBUI_KEY`, `COLLECTOR_TOKEN`; `COLLECTOR_ACCESS_SECRET` lives only in the Worker, rotate the service token to get a copy).
+Never printed; through stdin (`printf '%s' "$V" | npx wrangler secret put NAME`); also in Infisical (project `Equanime`, slug `equanime-ji3-a`, env `prod`, folder `/equanime-api`: `OPENWEBUI_KEY`, `COLLECTOR_TOKEN`; folder `/equanime-collector`: the collector VM's `.env` values; `COLLECTOR_ACCESS_SECRET` lives only in the Worker, rotate the service token to get a copy).
 
 | Where | Secrets |
 |---|---|
