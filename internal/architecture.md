@@ -59,6 +59,12 @@ person); `/v1` is stateless (clients send the conversation). The widget is one R
 (`#assistente`) share one `AgentProvider`, so expanding keeps an answer arriving. Its
 Tailwind is limited to the kit (`styles/agent.css`); the site's CSS sits in `@layer site`.
 
+The brand: a balance whose beam is the circumflex of "Equânime" (`components/Mark.astro`,
+the wordmark's â in `layouts/Layout.astro`, `public/favicon.svg`). The assistant is the same
+balance in a notary seal (`components/Seal.tsx`, passed as agent-kit's `renderMascot`): it
+weighs while thinking, turns its edge during a tool call, pulses its pivot while writing.
+Rubry's listing uses the seal (`rubry-web/public/logos/equanime.svg`).
+
 ## Rubry
 
 A sibling product: own identity and repo, no shared accounts or credit. In rubry.ai's chat

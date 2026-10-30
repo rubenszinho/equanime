@@ -10,7 +10,7 @@ const { id } = Astro.params;
 if (!id) return Astro.redirect("/analises/nova");
 ---
 
-<Layout title={`${view.pageTitle} | Equânime`}>
+<Layout title={`${view.pageTitle} | Equânime`} analysisId={id}>
 	<section class="wrap page">
 		<AnalysisView client:load analysisId={id} />
 	</section>

@@ -1,130 +1,138 @@
 /* Equânime: cool office paper, fountain-pen ink, a stamp-indigo accent.
    Verdict colours are their own tokens and always come with words and a mark. */
 
-:root {
-	--paper: #f2f4f6;
-	--sheet: #ffffff;
-	--ink: #14233a;
-	--ink-soft: #4e5b6e;
-	--ink-faint: #7b8696;
-	--hair: #d5dbe3;
-	--rule: #e6eaef;
-	--stamp: #3a3fae;
-	--stamp-ink: #ffffff;
-	--ok: #1e6b4c;
-	--ok-bg: #e5f1ea;
-	--flag: #a3321c;
-	--flag-bg: #f8e7e2;
-	--maybe: #8a6410;
-	--maybe-bg: #f6eed9;
-	--focus: #3a3fae;
-	--shadow: 0 1px 0 rgba(20, 35, 58, 0.04), 0 12px 32px -18px rgba(20, 35, 58, 0.28);
+/* Layer order: the site's styles, then the assistant's overrides, then Tailwind's utilities (only the kit's). */
+@layer theme, base, site, components, utilities;
 
-	--font-display: "Spectral", Georgia, serif;
-	--font-body: "Public Sans", system-ui, sans-serif;
-	--gutter: clamp(1rem, 4vw, 2.5rem);
-	--measure: 68ch;
-	color-scheme: light;
-}
+@layer site {
+	:root {
+		--paper: #f2f4f6;
+		--sheet: #ffffff;
+		--ink: #14233a;
+		--ink-soft: #4e5b6e;
+		--ink-faint: #7b8696;
+		--hair: #d5dbe3;
+		--rule: #e6eaef;
+		--stamp: #3a3fae;
+		--stamp-ink: #ffffff;
+		--ok: #1e6b4c;
+		--ok-bg: #e5f1ea;
+		--flag: #a3321c;
+		--flag-bg: #f8e7e2;
+		--maybe: #8a6410;
+		--maybe-bg: #f6eed9;
+		--focus: #3a3fae;
+		--shadow: 0 1px 0 rgba(20, 35, 58, 0.04), 0 12px 32px -18px rgba(20, 35, 58, 0.28);
 
-:root[data-theme="dark"] {
-	--paper: #0f1828;
-	--sheet: #16213a;
-	--ink: #e6ebf2;
-	--ink-soft: #aab4c3;
-	--ink-faint: #7f8a9b;
-	--hair: #2a3754;
-	--rule: #222e47;
-	--stamp: #9fa4ff;
-	--stamp-ink: #10162a;
-	--ok: #7fcfa6;
-	--ok-bg: #173329;
-	--flag: #ff9a83;
-	--flag-bg: #3a1f1a;
-	--maybe: #e6c26b;
-	--maybe-bg: #33291a;
-	--focus: #9fa4ff;
-	--shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 36px -18px rgba(0, 0, 0, 0.7);
-	color-scheme: dark;
-}
+		--font-display: "Spectral", Georgia, serif;
+		--font-body: "Public Sans", system-ui, sans-serif;
+		--gutter: clamp(1rem, 4vw, 2.5rem);
+		--measure: 68ch;
+		color-scheme: light;
+	}
 
-* { box-sizing: border-box; }
+	:root[data-theme="dark"] {
+		--paper: #0f1828;
+		--sheet: #16213a;
+		--ink: #e6ebf2;
+		--ink-soft: #aab4c3;
+		--ink-faint: #7f8a9b;
+		--hair: #2a3754;
+		--rule: #222e47;
+		--stamp: #9fa4ff;
+		--stamp-ink: #10162a;
+		--ok: #7fcfa6;
+		--ok-bg: #173329;
+		--flag: #ff9a83;
+		--flag-bg: #3a1f1a;
+		--maybe: #e6c26b;
+		--maybe-bg: #33291a;
+		--focus: #9fa4ff;
+		--shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 36px -18px rgba(0, 0, 0, 0.7);
+		color-scheme: dark;
+	}
 
-html { -webkit-text-size-adjust: 100%; }
+	* { box-sizing: border-box; }
 
-body {
-	margin: 0;
-	background: var(--paper);
-	color: var(--ink);
-	font: 400 1rem/1.6 var(--font-body);
-	font-variant-numeric: tabular-nums;
-	text-rendering: optimizeLegibility;
-}
+	html { -webkit-text-size-adjust: 100%; }
 
-a { color: var(--stamp); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
-a:hover { text-decoration-thickness: 2px; }
+	body {
+		margin: 0;
+		background: var(--paper);
+		color: var(--ink);
+		font: 400 1rem/1.6 var(--font-body);
+		font-variant-numeric: tabular-nums;
+		text-rendering: optimizeLegibility;
+	}
 
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+	a { color: var(--stamp); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+	a:hover { text-decoration-thickness: 2px; }
 
-h1, h2, h3 { font-family: var(--font-display); font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
-h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); }
-h2 { font-size: clamp(1.5rem, 2.6vw, 2rem); }
-h3 { font-size: 1.15rem; font-family: var(--font-body); font-weight: 650; letter-spacing: 0; }
-p { margin: 0; max-width: var(--measure); }
+	:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
 
-.wrap { width: min(1120px, 100% - 2 * var(--gutter)); margin-inline: auto; }
-.soft { color: var(--ink-soft); }
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+	h1, h2, h3 { font-family: var(--font-display); font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+	h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); }
+	h2 { font-size: clamp(1.5rem, 2.6vw, 2rem); }
+	h3 { font-size: 1.15rem; font-family: var(--font-body); font-weight: 650; letter-spacing: 0; }
+	p { margin: 0; max-width: var(--measure); }
 
-/* Header and footer */
-.top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 1.25rem; }
-.brand { display: inline-flex; align-items: center; gap: 0.6rem; color: var(--ink); text-decoration: none; font: 600 1.35rem/1 var(--font-display); }
-.brand svg { width: 30px; height: 30px; color: var(--stamp); }
-.top nav { display: flex; align-items: center; gap: 0.5rem; }
-.top nav a:not(.btn) { color: var(--ink-soft); text-decoration: none; padding: 0.5rem 0.6rem; font-size: 0.95rem; }
-.top nav a:not(.btn):hover { color: var(--ink); }
-.theme { display: inline-grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 999px; background: none; color: var(--ink-soft); cursor: pointer; }
-.theme:hover { color: var(--ink); background: var(--rule); }
-.theme svg { width: 20px; height: 20px; }
-.theme__sun, :root[data-theme="dark"] .theme__moon { display: none; }
-:root[data-theme="dark"] .theme__sun { display: block; }
-@media (max-width: 560px) { .top nav .how { display: none; } }
+	.wrap { width: min(1120px, 100% - 2 * var(--gutter)); margin-inline: auto; }
+	.soft { color: var(--ink-soft); }
+	.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.foot { border-top: 1px solid var(--hair); margin-top: 5rem; padding-block: 2rem 3rem; color: var(--ink-faint); font-size: 0.9rem; display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; justify-content: space-between; }
-.foot a { color: inherit; }
+	/* Header and footer */
+	.top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 1.25rem; }
+	.brand { display: inline-flex; align-items: center; gap: 0.6rem; color: var(--ink); text-decoration: none; font: 600 1.35rem/1 var(--font-display); }
+	.brand > svg { width: 30px; height: 30px; color: var(--stamp); }
+	/* The â's circumflex is the logo's beam, in stamp ink with its pivot. */
+	.wordmark__a { position: relative; display: inline-block; }
+	.wordmark__a svg { position: absolute; left: 50%; bottom: 0.62em; width: 0.62em; height: 0.31em; transform: translateX(-50%); color: var(--stamp); overflow: visible; }
+	.top nav { display: flex; align-items: center; gap: 0.5rem; }
+	.top nav a:not(.btn) { color: var(--ink-soft); text-decoration: none; padding: 0.5rem 0.6rem; font-size: 0.95rem; }
+	.top nav a:not(.btn):hover { color: var(--ink); }
+	.theme { display: inline-grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 999px; background: none; color: var(--ink-soft); cursor: pointer; }
+	.theme:hover { color: var(--ink); background: var(--rule); }
+	.theme svg { width: 20px; height: 20px; }
+	.theme__sun, :root[data-theme="dark"] .theme__moon { display: none; }
+	:root[data-theme="dark"] .theme__sun { display: block; }
+	@media (max-width: 560px) { .top nav .how { display: none; } }
 
-/* Buttons: one primary shape, one quiet shape. */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 44px; padding: 0.6rem 1.15rem; border-radius: 8px; border: 1px solid transparent; font: 600 0.98rem/1.2 var(--font-body); text-decoration: none; cursor: pointer; transition: background-color 0.15s, border-color 0.15s; }
-.btn--primary { background: var(--stamp); color: var(--stamp-ink); }
-.btn--primary:hover { background: color-mix(in oklab, var(--stamp) 86%, var(--ink)); }
-.btn--quiet { background: transparent; color: var(--ink); border-color: var(--hair); }
-.btn--quiet:hover { border-color: var(--ink-faint); }
-.btn--small { min-height: 36px; padding: 0.35rem 0.8rem; font-size: 0.9rem; }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
-/* Every busy button shows the same spinner. */
-.btn[aria-busy="true"]::before { content: ""; width: 1em; height: 1em; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+	.foot { border-top: 1px solid var(--hair); margin-top: 5rem; padding-block: 2rem 3rem; color: var(--ink-faint); font-size: 0.9rem; display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; justify-content: space-between; }
+	.foot a { color: inherit; }
 
-/* Verdict stamps */
-.verdict { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.6rem 0.2rem 0.45rem; border-radius: 4px; border: 1.5px solid currentColor; font: 650 0.8rem/1.3 var(--font-body); letter-spacing: 0.01em; white-space: nowrap; }
-.verdict svg { width: 14px; height: 14px; flex: none; }
-.verdict--no_conflict_identified { color: var(--ok); background: var(--ok-bg); }
-.verdict--potential_conflict { color: var(--flag); background: var(--flag-bg); }
-.verdict--inconclusive { color: var(--maybe); background: var(--maybe-bg); }
+	/* Buttons: one primary shape, one quiet shape. */
+	.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 44px; padding: 0.6rem 1.15rem; border-radius: 8px; border: 1px solid transparent; font: 600 0.98rem/1.2 var(--font-body); text-decoration: none; cursor: pointer; transition: background-color 0.15s, border-color 0.15s; }
+	.btn--primary { background: var(--stamp); color: var(--stamp-ink); }
+	.btn--primary:hover { background: color-mix(in oklab, var(--stamp) 86%, var(--ink)); }
+	.btn--quiet { background: transparent; color: var(--ink); border-color: var(--hair); }
+	.btn--quiet:hover { border-color: var(--ink-faint); }
+	.btn--small { min-height: 36px; padding: 0.35rem 0.8rem; font-size: 0.9rem; }
+	.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+	/* Every busy button shows the same spinner. */
+	.btn[aria-busy="true"]::before { content: ""; width: 1em; height: 1em; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin 0.8s linear infinite; }
+	@keyframes spin { to { transform: rotate(360deg); } }
 
-/* The board sheet: a document, used in the hero and on each analysis. */
-.sheet { background: var(--sheet); border: 1px solid var(--hair); border-radius: 6px; box-shadow: var(--shadow); }
+	/* Verdict stamps */
+	.verdict { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.6rem 0.2rem 0.45rem; border-radius: 4px; border: 1.5px solid currentColor; font: 650 0.8rem/1.3 var(--font-body); letter-spacing: 0.01em; white-space: nowrap; }
+	.verdict svg { width: 14px; height: 14px; flex: none; }
+	.verdict--no_conflict_identified { color: var(--ok); background: var(--ok-bg); }
+	.verdict--potential_conflict { color: var(--flag); background: var(--flag-bg); }
+	.verdict--inconclusive { color: var(--maybe); background: var(--maybe-bg); }
 
-/* Forms */
-.field { display: grid; gap: 0.35rem; }
-.field > span { font-size: 0.9rem; font-weight: 600; }
-.field small { color: var(--ink-faint); font-size: 0.85rem; }
-input, select { width: 100%; min-height: 44px; padding: 0.55rem 0.75rem; border: 1px solid var(--hair); border-radius: 6px; background: var(--sheet); color: var(--ink); font: inherit; }
-input::placeholder { color: var(--ink-faint); }
-input:focus-visible, select:focus-visible { outline-offset: 0; border-color: var(--focus); }
-input[aria-invalid="true"] { border-color: var(--flag); }
-.error { color: var(--flag); font-size: 0.9rem; }
+	/* The board sheet: a document, used in the hero and on each analysis. */
+	.sheet { background: var(--sheet); border: 1px solid var(--hair); border-radius: 6px; box-shadow: var(--shadow); }
 
-@media (prefers-reduced-motion: reduce) {
-	*, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+	/* Forms */
+	.field { display: grid; gap: 0.35rem; }
+	.field > span { font-size: 0.9rem; font-weight: 600; }
+	.field small { color: var(--ink-faint); font-size: 0.85rem; }
+	input, select { width: 100%; min-height: 44px; padding: 0.55rem 0.75rem; border: 1px solid var(--hair); border-radius: 6px; background: var(--sheet); color: var(--ink); font: inherit; }
+	input::placeholder { color: var(--ink-faint); }
+	input:focus-visible, select:focus-visible { outline-offset: 0; border-color: var(--focus); }
+	input[aria-invalid="true"] { border-color: var(--flag); }
+	.error { color: var(--flag); font-size: 0.9rem; }
+
+	@media (prefers-reduced-motion: reduce) {
+		*, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+	}
 }

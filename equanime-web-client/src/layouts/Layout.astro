@@ -2,14 +2,17 @@
 import "../styles/global.css";
 import Mark from "../components/Mark.astro";
 import Theme from "../components/Theme.astro";
+import Assistant from "../components/Assistant";
 import { site } from "../data/copy";
 
 interface Props {
 	title: string;
 	description?: string;
+	/** On an analysis page, the assistant offers to explain it. */
+	analysisId?: string;
 }
 
-const { title, description = site.description } = Astro.props;
+const { title, description = site.description, analysisId } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 ---
 
@@ -34,7 +37,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 	</head>
 	<body>
 		<header class="wrap top">
-			<a class="brand" href="/"><Mark />{site.name}</a>
+			<a class="brand" href="/" aria-label={site.name}><Mark /><span class="wordmark" aria-hidden="true">Equ<span class="wordmark__a">a<svg viewBox="0 0 12 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 5 6 1.4 10.5 5" /><circle cx="6" cy="1.4" r="1" fill="currentColor" stroke="none" /></svg></span>nime</span></a>
 			<nav aria-label="Principal">
 				<a class="how" href="/#como-funciona">{site.nav.how}</a>
 				<button type="button" class="theme" data-theme-toggle data-dark={site.nav.dark} data-light={site.nav.light} aria-label={site.nav.dark} title={site.nav.dark}>
@@ -47,6 +50,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 		<main>
 			<slot />
 		</main>
+		<Assistant client:only="react" analysisId={analysisId} />
 		<footer class="wrap foot">
 			<span>{site.name}: apoio à decisão para bancas.</span>
 			<a href={site.byUrl}>{site.by}</a>

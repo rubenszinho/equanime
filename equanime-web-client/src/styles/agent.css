@@ -1,0 +1,92 @@
+/* The assistant (agent-kit). Tailwind without its preflight: the kit's roots (.ak) reset their own
+   elements and the rest of the site keeps global.css. Classes come only from the kit. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "@rubrion/agent-kit-react/styles.css";
+@source "../../node_modules/@rubrion/agent-kit-react/dist";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* The kit draws with shadcn/ui's tokens; here they are Equânime's. */
+:root {
+	--background: var(--paper);
+	--foreground: var(--ink);
+	--card: var(--sheet);
+	--card-foreground: var(--ink);
+	--popover: var(--sheet);
+	--popover-foreground: var(--ink);
+	--primary: var(--stamp);
+	--primary-foreground: var(--stamp-ink);
+	--secondary: var(--rule);
+	--secondary-foreground: var(--ink);
+	--muted: var(--rule);
+	--muted-foreground: var(--ink-soft);
+	--accent: var(--rule);
+	--accent-foreground: var(--ink);
+	--destructive: var(--flag);
+	--border: var(--hair);
+	--input: var(--hair);
+	--ring: var(--focus);
+}
+
+@theme inline {
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--font-sans: var(--font-body);
+}
+
+/* The site layer styles bare elements (headings, inputs, paragraphs); inside the kit they give way.
+   The kit's own utilities sit in a later layer and still win. */
+@layer components {
+	.ak { font-family: var(--font-body); }
+	.ak :is(h1, h2, h3, h4) { font-family: inherit; letter-spacing: 0; line-height: inherit; }
+	.ak p { max-width: none; }
+	.ak :is(input, textarea, select) { width: auto; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+	.ak details summary { margin: 0; font-size: inherit; font-weight: inherit; color: inherit; }
+}
+
+/* Expanded: the same conversation over the page. */
+.eq-assistant { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; background: var(--paper); }
+.eq-assistant__bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.5rem var(--gutter); border-bottom: 1px solid var(--hair); background: var(--sheet); font-family: var(--font-display); font-size: 1.1rem; }
+.eq-assistant__screen { flex: 1; min-height: 0; }
+
+/* The seal (components/Seal.tsx). Pivot at (32, 18); at 8° the beam's ends move about 2 units,
+   and the pans follow them. */
+.eq-seal { display: block; color: var(--stamp); overflow: visible; }
+.eq-seal__beam, .eq-seal__pan, .eq-seal__edge, .eq-seal__pivot { transform-box: view-box; }
+.eq-seal__beam { transform-origin: 32px 18px; }
+.eq-seal__edge { transform-origin: 32px 32px; }
+.eq-seal__pivot { transform-origin: 32px 18px; }
+
+@keyframes eq-weigh { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+@keyframes eq-pan-left { 0%, 100% { transform: translate(1.5px, 1.7px); } 50% { transform: translate(-1.3px, -1.9px); } }
+@keyframes eq-pan-right { 0%, 100% { transform: translate(1.3px, -1.9px); } 50% { transform: translate(-1.5px, 1.7px); } }
+@keyframes eq-turn { to { transform: rotate(360deg); } }
+@keyframes eq-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.45); } }
+
+.eq-seal--thinking .eq-seal__beam { animation: eq-weigh 1.6s ease-in-out infinite; }
+.eq-seal--thinking .eq-seal__pan--left { animation: eq-pan-left 1.6s ease-in-out infinite; }
+.eq-seal--thinking .eq-seal__pan--right { animation: eq-pan-right 1.6s ease-in-out infinite; }
+.eq-seal--tool .eq-seal__edge { animation: eq-turn 6s linear infinite; }
+.eq-seal--speaking .eq-seal__pivot { animation: eq-pulse 1.1s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+	.ak .animate-spin, .ak .animate-pulse { animation: none; }
+	.eq-seal * { animation: none !important; }
+}

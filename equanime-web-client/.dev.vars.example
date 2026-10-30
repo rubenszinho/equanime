@@ -1,2 +1,5 @@
 # The local API (cd ../equanime-api && npx wrangler dev --port 8787).
 EQUANIME_API_URL=http://127.0.0.1:8787
+
+# Who the assistant thinks you are without Access (local only).
+DEV_USER=dev@usp.br

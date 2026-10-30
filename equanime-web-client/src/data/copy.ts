@@ -186,3 +186,18 @@ export const notFound = {
 	body: "O endereço não leva a nenhuma página da Equânime.",
 	home: "Voltar ao início",
 };
+
+export const assistant = {
+	subtitle: "Análise de Banca",
+	expanded: "Assistente da Equânime",
+	close: "Fechar o assistente",
+	greeting: (first: string) => (first ? `Olá, ${first}. Qual banca vamos verificar?` : "Qual banca vamos verificar?"),
+	hint: "Informe o candidato, os avaliadores (titular ou suplente) e, em banca acadêmica, o orientador, com os links do Lattes.",
+	suggestions: ["Quero verificar uma banca", "Quais análises eu já fiz?", "Como funciona a verificação?"],
+	explain: "Explique o resultado desta análise",
+	tools: {
+		criar_analise: ["Registrando a análise", "Análise registrada"],
+		consultar_analise: ["Consultando a análise", "Análise consultada"],
+		minhas_analises: ["Buscando suas análises", "Análises encontradas"],
+	} as Record<string, [string, string]>,
+};
