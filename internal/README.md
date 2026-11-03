@@ -5,7 +5,7 @@ these notes say where things are and why.
 
 | File | Read it for |
 |---|---|
-| [architecture.md](architecture.md) | The three parts, how an analysis flows, where CVs come from |
+| [architecture.md](architecture.md) | The parts (API, web, agent, collector), how an analysis flows, where CVs and documents come from |
 | [operations.md](operations.md) | Toolchain, local dev, deploys, secrets, checks |
 | [data.md](data.md) | What is stored, where, and for how long |
 | [conventions.md](conventions.md) | How the owner wants work done; open items |
