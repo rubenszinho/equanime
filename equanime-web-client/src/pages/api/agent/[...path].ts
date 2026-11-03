@@ -10,7 +10,7 @@ const gateway = createAgentGateway({
 	agent: () => env.AGENT,
 	identify: async (c) => {
 		const email = await accessEmail(c.req.raw, env);
-		return email ? { tenant: "equanime", person: email, role: "member", name: displayName(email) } : null;
+		return email ? { tenant: "equanime", person: email, role: "member", name: await displayName(c.req.raw, email) } : null;
 	},
 });
 

@@ -2,10 +2,23 @@ import { AgentProvider, AssistantScreen, ChatBox, ptBR } from "@rubrion/agent-ki
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { assistant } from "../data/copy";
+import { api } from "../lib/api";
 import Seal from "./Seal";
 import "../styles/agent.css";
 
 type Me = { email: string; name: string };
+type Upload = { curriculum_ref: string; lattes_id: string; name: string | null; publications: number };
+
+// A Lattes XML or ZIP attached in the chat is stored like one sent on the analysis page; the agent
+// gets the line below and passes curriculum_ref to its tools.
+async function upload(file: File) {
+	const body = new FormData();
+	body.set("file", file);
+	const reply = await api<Upload>("/curriculos", { method: "POST", body });
+	if (!reply.ok) return { error: reply.message };
+	const { curriculum_ref, lattes_id, name, publications } = reply.body;
+	return { note: assistant.attached(name ?? file.name, lattes_id, publications, curriculum_ref) };
+}
 
 const HASH = "#assistente";
 
@@ -44,12 +57,13 @@ export default function Assistant({ analysisId }: { analysisId?: string }) {
 	return (
 		<AgentProvider
 			person={me.email}
-			personName={me.name}
+			personName={me.name || undefined}
 			storageKey="equanime"
 			defaultAgent="banca"
 			strings={ptBR}
 			toolLabels={assistant.tools}
 			renderMascot={({ phase, size }) => <Seal phase={phase} size={size} />}
+			attach={{ accept: ".xml,.zip,text/xml,application/zip", upload }}
 			suggestions={analysisId ? [`${assistant.explain} (${analysisId})`, ...assistant.suggestions.slice(0, 2)] : assistant.suggestions}
 		>
 			{expanded ? (

@@ -7,5 +7,5 @@ export const prerender = false;
 export const GET: APIRoute = async ({ request }) => {
 	const email = await accessEmail(request, env);
 	if (!email) return Response.json({ error: "Sessão não encontrada." }, { status: 401 });
-	return Response.json({ email, name: displayName(email) }, { headers: { "cache-control": "private, no-store" } });
+	return Response.json({ email, name: await displayName(request, email) }, { headers: { "cache-control": "private, no-store" } });
 };

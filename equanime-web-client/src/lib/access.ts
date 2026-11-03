@@ -17,4 +17,23 @@ export async function accessEmail(request: Request, env: { TEAM_DOMAIN?: string;
 	}
 }
 
-export const displayName = (email: string) => email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\p{L}/gu, (c) => c.toUpperCase());
+const names = new Map<string, string>();
+
+// The name the identity provider gives (Google), from Access's identity endpoint with the visitor's
+// own session cookie. Empty when there is none: the assistant then greets without a name instead of
+// guessing one from the email.
+export async function displayName(request: Request, email: string): Promise<string> {
+	const known = names.get(email);
+	if (known !== undefined) return known;
+	const cookie = request.headers.get("cookie") ?? "";
+	if (!/CF_Authorization=/.test(cookie)) return "";
+	try {
+		const reply = await fetch(new URL("/cdn-cgi/access/get-identity", request.url), { headers: { cookie } });
+		const identity = reply.ok ? ((await reply.json()) as { name?: unknown; email?: unknown }) : null;
+		const name = identity && String(identity.email).toLowerCase() === email && typeof identity.name === "string" ? identity.name.trim().slice(0, 80) : "";
+		names.set(email, name);
+		return name;
+	} catch {
+		return "";
+	}
+}

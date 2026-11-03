@@ -192,12 +192,14 @@ export const assistant = {
 	expanded: "Assistente da Equânime",
 	close: "Fechar o assistente",
 	greeting: (first: string) => (first ? `Olá, ${first}. Qual banca vamos verificar?` : "Qual banca vamos verificar?"),
-	hint: "Informe o candidato, os avaliadores (titular ou suplente) e, em banca acadêmica, o orientador, com os links do Lattes.",
+	hint: "Informe o candidato, os avaliadores (titular ou suplente) e, em banca acadêmica, o orientador, com os links do Lattes. Se a Plataforma Lattes pedir verificação, anexe o XML de cada currículo pelo clipe.",
 	suggestions: ["Quero verificar uma banca", "Quais análises eu já fiz?", "Como funciona a verificação?"],
 	explain: "Explique o resultado desta análise",
+	attached: (name: string, lattes: string, publications: number, ref: string) => `📎 Currículo Lattes anexado: ${name} (Lattes ${lattes}, ${publications} publicações). curriculum_ref: ${ref}`,
 	tools: {
 		criar_analise: ["Registrando a análise", "Análise registrada"],
 		consultar_analise: ["Consultando a análise", "Análise consultada"],
 		minhas_analises: ["Buscando suas análises", "Análises encontradas"],
+		reprocessar_analise: ["Reprocessando com os currículos", "Análise reenviada"],
 	} as Record<string, [string, string]>,
 };
