@@ -1,6 +1,6 @@
 // One agent, two doors: agent-kit's definition for the web app's chat, the Rubry spec for /v1.
 import type { AgentDefinition } from "@rubrion/agent-kit-server";
-import type { AgentSpec } from "@rubrion/mastra-cloudflare";
+import { forgetResults, type AgentSpec } from "@rubrion/mastra-cloudflare";
 import { tools } from "./tools";
 
 /** Workers AI; it must support tool calls. */
@@ -36,6 +36,7 @@ DOCUMENTOS ANEXADOS
 - Do texto, tire só o que está escrito: candidato, orientador, título, cada avaliador com o papel (titular ou suplente) e o endereço Lattes. Mostre o que encontrou numa lista curta.
 - Lattes que o documento não traz: peça ao usuário. Nunca deduza um Lattes por nome. Papel não escrito: pergunte.
 - Com candidato e avaliadores completos (Lattes e papel de cada um), mostre a lista e chame criar_analise na mesma resposta, sem pedir confirmação. O documento não substitui os currículos.
+- Um bloco <document name="…"> … </document> na mensagem é um documento já convertido em texto (vem de outro chat, como o rubry.ai): use esse texto como se viesse de ler_documento, com as mesmas regras.
 
 FORMA
 - Português do Brasil, curto, em Markdown. Termine lembrando que o resultado é apoio à decisão e deve ser conferido por uma pessoa.
@@ -49,6 +50,8 @@ export const BANCA: AgentDefinition = {
 	tools,
 	maxOutputTokens: 1200,
 	instructions: INSTRUCTIONS,
+	// A document's text goes with the turn that read it, not with every message after.
+	inputProcessors: [forgetResults(["ler_documento"])],
 };
 
 export const SPEC: AgentSpec = {
@@ -58,4 +61,7 @@ export const SPEC: AgentSpec = {
 	instructions: INSTRUCTIONS,
 	tools,
 	maxOutputTokens: 1200,
+	// /v1 clients (rubry.ai) may send an edital or minutes, as its text.
+	capabilities: ["files"],
+	inputProcessors: [forgetResults(["ler_documento"])],
 };

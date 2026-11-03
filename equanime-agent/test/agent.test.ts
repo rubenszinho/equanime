@@ -22,7 +22,7 @@ describe("who the agent acts for", () => {
 		expect((await SELF.fetch("https://agent.equanime.rubrion.ai/v1/models")).status).toBe(401);
 		expect((await SELF.fetch("https://agent.equanime.rubrion.ai/agents", { headers: { "x-agent-person": "x" } })).status).toBe(404);
 		const models = await SELF.fetch("https://agent.equanime.rubrion.ai/v1/models", { headers: { authorization: "Bearer owui-key" } });
-		expect((await models.json<{ data: Array<{ id: string }> }>()).data.map((m) => m.id)).toEqual(["banca"]);
+		expect((await models.json<{ data: Array<{ id: string; capabilities?: string[] }> }>()).data.map((m) => [m.id, m.capabilities])).toEqual([["banca", ["files"]]]);
 	});
 
 	it("sends the person to equanime-api with the agent key", async () => {
