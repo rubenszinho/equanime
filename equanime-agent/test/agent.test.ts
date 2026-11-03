@@ -2,7 +2,7 @@ import { env, SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { asPerson } from "../src/caller";
 import { v1Person } from "../src/index";
-import { consultarAnalise, minhasAnalises, reprocessarAnalise } from "../src/tools";
+import { consultarAnalise, loadDocument, minhasAnalises, reprocessarAnalise } from "../src/tools";
 
 const run = (tool: { execute?: (...args: never[]) => unknown }, input: unknown) => (tool.execute as (input: unknown, context: unknown) => Promise<Record<string, unknown>>)(input, {});
 
@@ -50,5 +50,15 @@ describe("consultar_analise", () => {
 
 	it("returns the API's message instead of throwing", async () => {
 		expect(await asPerson("ana@usp.br", () => run(consultarAnalise, { analise: "missing" }))).toEqual({ error: "Análise não encontrada." });
+	});
+});
+
+describe("ler_documento", () => {
+	it("loads the person's own document with its name, and nothing else", async () => {
+		const doc = await asPerson("ana@usp.br", () => loadDocument("00000000-0000-4000-8000-000000000001"));
+		expect(doc?.name).toBe("edital banca.txt");
+		expect(new TextDecoder().decode(doc!.bytes as ArrayBuffer)).toBe("Banca: Rita (titular)");
+		expect(await asPerson("ana@usp.br", () => loadDocument("00000000-0000-4000-8000-000000000002"))).toBeNull();
+		expect(await asPerson("ana@usp.br", () => loadDocument("../analises/a1"))).toBeNull();
 	});
 });

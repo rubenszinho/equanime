@@ -41,8 +41,9 @@ Agents4Gov models at ICMC. A failure never fails the rules; calls are logged in 
 
 ## The agent
 
-`equanime-agent` holds one agent (`src/agent.ts`) and three tools (`src/tools.ts`:
-`criar_analise`, `consultar_analise`, `minhas_analises`) that call the API through the
+`equanime-agent` holds one agent (`src/agent.ts`) and its tools (`src/tools.ts`:
+`criar_analise`, `consultar_analise`, `minhas_analises`, `reprocessar_analise`,
+`ler_documento`) that call the API through the
 `API` service binding with `Bearer AGENT_KEY` and `X-Equanime-Person`. The API trusts that
 header only with the key (`src/auth.ts`), so an analysis started in a chat belongs to the
 same person as in the web pages. Who the person is (`src/caller.ts`, AsyncLocalStorage):
@@ -52,6 +53,15 @@ same person as in the web pages. Who the person is (`src/caller.ts`, AsyncLocalS
 | Web chat (`/api/agent/*` → gateway → service binding) | the Access email, checked again by the web Worker (`src/lib/access.ts`) |
 | `/v1` with `V1_KEY_RUBRY` (rubry.ai) | `rubry:<pseudonym>` from `X-Equanime-Person` (a hash; rubry.ai never sends its account id) |
 | `/v1` with `V1_KEY_OPENWEBUI` | `openwebui:<email>` when OpenWebUI forwards user headers, else `service:openwebui` |
+
+Attachments in the web chat: a Lattes XML/ZIP goes to `POST /curriculos` (its
+`curriculum_ref` feeds an analysis); anything else (an edital, minutes, a list of the
+board: PDF, Word, ODT, spreadsheet, CSV, text) goes to `POST /documentos`, and the message
+carries `📄 Documento anexado: … document_ref`. `ler_documento` fetches it back as the
+person (`GET /documentos/{id}/arquivo`, owner only) and turns it into Markdown with
+Workers AI `toMarkdown` (`readFileTool` from `@rubrion/mastra-cloudflare`); the agent
+takes the board from it and asks for any Lattes the document lacks. A document never
+feeds the conflict rules.
 
 The web chat keeps conversations in D1 `equanime-agent-memory` (Mastra Memory, 50 per
 person); `/v1` is stateless (clients send the conversation). The widget is one React island

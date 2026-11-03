@@ -3,14 +3,16 @@ import { bodyLimit } from "hono/body-limit";
 import { authenticate, type Actor } from "./auth";
 import { analysisRoutes } from "./routes/analises";
 import { curriculumRoutes, UPLOAD_LIMIT } from "./routes/curriculos";
+import { DOCUMENT_LIMIT, documentRoutes } from "./routes/documentos";
 import { logError } from "./log";
 
 type AppEnv = { Bindings: CloudflareBindings; Variables: { actor: Actor } };
 
 export function createApp(): OpenAPIHono<AppEnv> {
 	const app = new OpenAPIHono<AppEnv>();
-	// CV uploads are the only large bodies.
-	app.use("*", (c, next) => bodyLimit({ maxSize: c.req.path === "/curriculos" ? UPLOAD_LIMIT + 64 * 1024 : 1024 * 1024 })(c, next));
+	// CV and document uploads are the only large bodies.
+	const limitOf = (path: string) => (path === "/curriculos" ? UPLOAD_LIMIT : path === "/documentos" ? DOCUMENT_LIMIT : 0);
+	app.use("*", (c, next) => bodyLimit({ maxSize: limitOf(c.req.path) ? limitOf(c.req.path) + 64 * 1024 : 1024 * 1024 })(c, next));
 	app.use("*", authenticate);
 	app.onError((error, c) => {
 		logError("request_failed", { path: c.req.path, error: error.message });
@@ -28,6 +30,7 @@ export function createApp(): OpenAPIHono<AppEnv> {
 	});
 	app.route("/", analysisRoutes);
 	app.route("/", curriculumRoutes);
+	app.route("/", documentRoutes);
 	app.openAPIRegistry.registerComponent("securitySchemes", "bearer", {
 		type: "http",
 		scheme: "bearer",

@@ -9,11 +9,21 @@ import "../styles/agent.css";
 type Me = { email: string; name: string };
 type Upload = { curriculum_ref: string; lattes_id: string; name: string | null; publications: number };
 
+type Document = { document_ref: string; name: string };
+
+const CV = /\.(xml|zip)$/i;
+const DOCUMENTS = ".pdf,.docx,.odt,.xlsx,.ods,.csv,.txt,.md,.html";
+
 // A Lattes XML or ZIP attached in the chat is stored like one sent on the analysis page; the agent
-// gets the line below and passes curriculum_ref to its tools.
+// gets the line below and passes curriculum_ref to its tools. Anything else is a document about the
+// board (an edital, minutes): stored for the agent to read with ler_documento.
 async function upload(file: File) {
 	const body = new FormData();
 	body.set("file", file);
+	if (!CV.test(file.name)) {
+		const sent = await api<Document>("/documentos", { method: "POST", body });
+		return sent.ok ? { note: assistant.document(sent.body.name, sent.body.document_ref) } : { error: sent.message };
+	}
 	const reply = await api<Upload>("/curriculos", { method: "POST", body });
 	if (!reply.ok) return { error: reply.message };
 	const { curriculum_ref, lattes_id, name, publications } = reply.body;
@@ -63,7 +73,7 @@ export default function Assistant({ analysisId }: { analysisId?: string }) {
 			strings={ptBR}
 			toolLabels={assistant.tools}
 			renderMascot={({ phase, size }) => <Seal phase={phase} size={size} />}
-			attach={{ accept: ".xml,.zip,text/xml,application/zip", upload }}
+			attach={{ accept: `.xml,.zip,text/xml,application/zip,${DOCUMENTS}`, upload }}
 			suggestions={analysisId ? [`${assistant.explain} (${analysisId})`, ...assistant.suggestions.slice(0, 2)] : assistant.suggestions}
 		>
 			{expanded ? (

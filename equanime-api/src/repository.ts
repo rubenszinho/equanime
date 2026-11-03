@@ -206,6 +206,26 @@ export async function resetAnalysis(db: D1Database, id: string, at: string): Pro
 	await addEvent(db, id, "pending", "A análise foi reenviada e aguarda processamento.", at);
 }
 
+export type DocumentRow = { id: string; actor: string; name: string; content_type: string; size: number; object_key: string; created_at: string };
+
+export async function insertDocument(db: D1Database, row: DocumentRow): Promise<void> {
+	await db.prepare("INSERT INTO documents (id, actor, name, content_type, size, object_key, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(
+		row.id, row.actor, row.name, row.content_type, row.size, row.object_key, row.created_at,
+	).run();
+}
+
+export async function getDocument(db: D1Database, id: string): Promise<DocumentRow | null> {
+	return db.prepare("SELECT * FROM documents WHERE id = ?").bind(id).first<DocumentRow>();
+}
+
+export async function expiredDocuments(db: D1Database, before: string): Promise<DocumentRow[]> {
+	return (await db.prepare("SELECT * FROM documents WHERE created_at < ?").bind(before).all<DocumentRow>()).results;
+}
+
+export async function deleteDocument(db: D1Database, id: string): Promise<void> {
+	await db.prepare("DELETE FROM documents WHERE id = ?").bind(id).run();
+}
+
 export async function expiredUploads(db: D1Database, before: string): Promise<UploadRow[]> {
 	const rows = await db.prepare("SELECT * FROM uploads WHERE created_at < ?").bind(before).all<UploadRow>();
 	return rows.results;

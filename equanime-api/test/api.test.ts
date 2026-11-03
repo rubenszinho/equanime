@@ -35,6 +35,7 @@ describe("analysis API", () => {
 		expect(spec.info.description).toContain("POST /analises");
 		expect(spec.paths["/analises/{analysis_id}/reprocessar"]).toBeTruthy();
 		expect(spec.paths["/curriculos"]).toBeTruthy();
+		expect(spec.paths["/documentos"]).toBeTruthy();
 	});
 
 	it("runs the academic workflow body and returns evidence plus PDF", async () => {
@@ -179,5 +180,34 @@ describe("analysis API", () => {
 		// Another person through the same agent sees nothing of Ana's.
 		expect((await call(`/analises/${analysis_id}`, { headers: as("rubry:visitor-1") })).status).toBe(404);
 		expect((await (await call("/analises", { headers: as("rubry:visitor-1") })).json<{ analyses: unknown[] }>()).analyses).toEqual([]);
+	});
+
+	it("keeps an attached document for the person who sent it only", async () => {
+		const app = createApp();
+		const secured = { ...env, AUTH_MODE: "access", AGENT_KEY: "agent-key", POLICY_AUD: "" } as CloudflareBindings;
+		const call = async (path: string, person: string, body?: FormData) => {
+			const ctx = createExecutionContext();
+			const response = await app.fetch(
+				new Request(`https://equanime.test${path}`, { method: body ? "POST" : "GET", body, headers: { authorization: "Bearer agent-key", "x-equanime-person": person } }),
+				secured,
+				ctx,
+			);
+			await waitOnExecutionContext(ctx);
+			return response;
+		};
+		const form = (name: string, text: string) => {
+			const data = new FormData();
+			data.set("file", new File([text], name));
+			return data;
+		};
+		const sent = await call("/documentos", "ana@usp.br", form("edital.pdf", "%PDF-1.4 banca"));
+		expect(sent.status).toBe(201);
+		const doc = await sent.json<{ document_ref: string; name: string; content_type: string }>();
+		expect(doc).toMatchObject({ name: "edital.pdf", content_type: "application/pdf" });
+		const file = await call(`/documentos/${doc.document_ref}/arquivo`, "ana@usp.br");
+		expect(file.status).toBe(200);
+		expect(await file.text()).toBe("%PDF-1.4 banca");
+		expect((await call(`/documentos/${doc.document_ref}/arquivo`, "rubry:visitor-1")).status).toBe(404);
+		expect((await call("/documentos", "ana@usp.br", form("virus.exe", "MZ"))).status).toBe(400);
 	});
 });

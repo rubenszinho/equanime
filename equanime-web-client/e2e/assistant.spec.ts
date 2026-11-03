@@ -50,3 +50,28 @@ test("a CV attached in the chat is uploaded and goes out with the question", asy
 	expect(question).toContain("curriculum_ref: ref-9");
 	expect(question).toContain("Lattes 9999999999999999");
 });
+
+test("a PDF attached in the chat is stored as a document for the agent to read", async ({ page }) => {
+	await page.route("**/api/me", (route) => route.fulfill({ json: { email: "ana@usp.br", name: "Ana" } }));
+	await page.route("**/api/agent/agents", (route) => route.fulfill({ json: [{ id: "banca", name: "Análise de Banca", tagline: "", thinking: false }] }));
+	await page.route("**/api/agent/status", (route) => route.fulfill({ json: { ready: true, reason: null, message: null } }));
+	await page.route("**/api/agent/threads", (route) => route.fulfill({ json: [] }));
+	let cvs = 0;
+	await page.route("**/api/curriculos", (route) => (cvs++, route.fulfill({ status: 500, json: {} })));
+	await page.route("**/api/documentos", (route) => route.fulfill({ status: 201, json: { document_ref: "d-1", name: "edital.pdf", content_type: "application/pdf", size: 9 } }));
+	let question = "";
+	await page.route("**/api/agent/stream", async (route) => {
+		question = (route.request().postDataJSON() as { message: string }).message;
+		await route.fulfill({ headers: { "content-type": "text/event-stream" }, body: 'data: {"type":"text-delta","text":"Lido."}\n\ndata: [DONE]\n\n' });
+	});
+
+	await page.goto("/");
+	await page.getByRole("button", { name: "Abrir o assistente" }).click();
+	const box = page.getByRole("region", { name: "Assistente" });
+	await box.locator('input[type="file"]').setInputFiles({ name: "edital.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4") });
+	await expect(box.getByText("edital.pdf")).toBeVisible();
+	await box.getByRole("button", { name: "Perguntar" }).click();
+	await expect(box.getByText("Lido.")).toBeVisible();
+	expect(question).toContain("📄 Documento anexado: edital.pdf. document_ref: d-1");
+	expect(cvs).toBe(0);
+});

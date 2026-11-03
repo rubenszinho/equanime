@@ -2,6 +2,7 @@
 // already decided by the service, and { error } instead of throwing, so the agent explains it.
 import { env } from "cloudflare:workers";
 import { createTool, z } from "@rubrion/agent-kit-server";
+import { readFileTool, type LoadedFile } from "@rubrion/mastra-cloudflare";
 import { currentPerson } from "./caller";
 
 type Rule = { detected: boolean; inconclusive: boolean; result: string; applicable?: boolean };
@@ -29,12 +30,17 @@ type Analysis = {
 const TERMINAL = new Set(["completed", "completed_with_warnings", "failed"]);
 const RULES = { coauthorship: "Coautoria", recent_advisor_relationship: "Relação recente com o orientador", joint_research_projects: "Projetos de pesquisa em conjunto" } as const;
 
-async function api<T>(path: string, init: RequestInit = {}): Promise<{ ok: true; body: T } | { ok: false; error: string }> {
+/** equanime-api, as the person the agent talks to. */
+function call(path: string, init: RequestInit = {}) {
 	const headers = new Headers(init.headers);
 	headers.set("authorization", `Bearer ${env.AGENT_KEY}`);
 	headers.set("x-equanime-person", currentPerson());
 	if (init.body) headers.set("content-type", "application/json");
-	const response = await env.API.fetch(new Request(`https://equanime-api${path}`, { ...init, headers }));
+	return env.API.fetch(new Request(`https://equanime-api${path}`, { ...init, headers }));
+}
+
+async function api<T>(path: string, init: RequestInit = {}): Promise<{ ok: true; body: T } | { ok: false; error: string }> {
+	const response = await call(path, init);
 	const body = (await response.json().catch(() => null)) as (T & { message?: string }) | null;
 	if (!response.ok || !body) return { ok: false, error: body?.message ?? `A API respondeu ${response.status}.` };
 	return { ok: true, body };
@@ -153,4 +159,22 @@ export const reprocessarAnalise = createTool({
 	},
 });
 
-export const tools = { criar_analise: criarAnalise, consultar_analise: consultarAnalise, minhas_analises: minhasAnalises, reprocessar_analise: reprocessarAnalise };
+/** A document the person attached in the chat, if it is theirs (the API checks). */
+export async function loadDocument(ref: string): Promise<LoadedFile | null> {
+	if (!/^[0-9a-f-]{36}$/.test(ref)) return null;
+	const response = await call(`/documentos/${ref}/arquivo`);
+	if (!response.ok) return null;
+	const named = /filename\*=UTF-8''([^;]+)/.exec(response.headers.get("content-disposition") ?? "");
+	return { name: named ? decodeURIComponent(named[1]) : "documento", type: response.headers.get("content-type") ?? undefined, bytes: await response.arrayBuffer() };
+}
+
+// An edital, minutes or a list of the board, as text: the agent takes the people and Lattes from it.
+export const lerDocumento = readFileTool({
+	id: "ler_documento",
+	description: "Lê um documento que o usuário anexou (edital, ata, lista da banca; PDF, Word, planilha, texto) e devolve o texto em Markdown. Passe o document_ref da linha do anexo.",
+	ai: () => env.AI as never,
+	load: (ref) => loadDocument(ref),
+	maxChars: 20_000,
+});
+
+export const tools = { ler_documento: lerDocumento, criar_analise: criarAnalise, consultar_analise: consultarAnalise, minhas_analises: minhasAnalises, reprocessar_analise: reprocessarAnalise };

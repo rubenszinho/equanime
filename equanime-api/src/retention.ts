@@ -1,4 +1,4 @@
-import { deleteAnalysis, deleteUpload, expiredAnalyses, expiredUploads, snapshotKeys } from "./repository";
+import { deleteAnalysis, deleteDocument, deleteUpload, expiredAnalyses, expiredDocuments, expiredUploads, snapshotKeys } from "./repository";
 import { logInfo } from "./log";
 
 export async function purgeExpired(env: CloudflareBindings, now = new Date()): Promise<number> {
@@ -16,6 +16,11 @@ export async function purgeExpired(env: CloudflareBindings, now = new Date()): P
 	for (const upload of await expiredUploads(env.DB, before)) {
 		await env.EVIDENCE.delete(upload.object_key);
 		await deleteUpload(env.DB, upload.id);
+	}
+	// And so do documents attached in the chat.
+	for (const document of await expiredDocuments(env.DB, before)) {
+		await env.EVIDENCE.delete(document.object_key);
+		await deleteDocument(env.DB, document.id);
 	}
 	return rows.length;
 }

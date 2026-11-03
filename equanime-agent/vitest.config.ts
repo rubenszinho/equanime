@@ -16,6 +16,9 @@ export default defineConfig({
 							if (request.headers.get("authorization") !== "Bearer agent-key" || !person) return Response.json({ message: "Autenticação obrigatória." }, { status: 401 });
 							const url = new URL(request.url);
 							if (url.pathname === "/analises" && request.method === "GET") return Response.json({ analyses: [{ analysis_id: "a1", status: "completed", candidate_name: person, work_title: null, summary: null, web_url: null, created_at: "2026-10-30" }] });
+							if (url.pathname === "/documentos/00000000-0000-4000-8000-000000000001/arquivo")
+								return new Response("Banca: Rita (titular)", { headers: { "content-type": "text/plain", "content-disposition": "attachment; filename*=UTF-8''edital%20banca.txt" } });
+							if (url.pathname.startsWith("/documentos/")) return Response.json({ message: "Documento não encontrado." }, { status: 404 });
 							if (url.pathname === "/analises/missing") return Response.json({ message: "Análise não encontrada." }, { status: 404 });
 							if (url.pathname.endsWith("/reprocessar") && JSON.stringify(await request.json()) !== '{"curriculum_refs":["ref-1"]}') return Response.json({ message: "Corpo inesperado." }, { status: 400 });
 							return Response.json({

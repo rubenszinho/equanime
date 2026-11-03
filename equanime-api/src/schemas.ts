@@ -198,6 +198,15 @@ export const UploadSchema = z
 	})
 	.openapi("CurriculumUpload");
 
+export const DocumentSchema = z
+	.object({
+		document_ref: z.string().openapi({ description: "Referência do documento, para o assistente ler." }),
+		name: z.string(),
+		content_type: z.string(),
+		size: z.number(),
+	})
+	.openapi("DocumentUpload");
+
 export const ReprocessSchema = z
 	.object({
 		curriculum_refs: z.array(z.string()).max(20).default([]).openapi({
