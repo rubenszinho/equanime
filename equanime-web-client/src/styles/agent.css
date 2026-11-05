@@ -1,9 +1,9 @@
-/* The assistant (agent-kit). Tailwind without its preflight: the kit's roots (.ak) reset their own
+/* The assistant (Beholder). Tailwind without its preflight: the kit's roots (.ak) reset their own
    elements and the rest of the site keeps global.css. Classes come only from the kit. */
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
-@import "@rubrion/agent-kit-react/styles.css";
-@source "../../node_modules/@rubrion/agent-kit-react/dist";
+@import "@rubrion/beholder-react/styles.css";
+@source "../../node_modules/@rubrion/beholder-react/dist";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 

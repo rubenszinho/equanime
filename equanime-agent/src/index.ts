@@ -1,9 +1,9 @@
 // The Equânime agent Worker, with two doors over the same agent and tools:
 //   /v1/*  OpenAI-compatible (rubry.ai, OpenWebUI), with a key per client, on agent.equanime.rubrion.ai
-//   /*     agent-kit's routes for the web app's chat, only through its service binding
+//   /*     Beholder's routes for the web app's chat, only through its service binding
 // Either way the person asking is put where the tools find it (caller.ts), so equanime-api
 // keeps each person's analyses to them.
-import { createAgentWorker } from "@rubrion/agent-kit-server";
+import { createAgentWorker } from "@rubrion/beholder-server";
 import { createAgentServer, defineAgents, workersAI } from "@rubrion/mastra-cloudflare";
 import { BANCA, MODEL, SPEC } from "./agent";
 import { asPerson } from "./caller";
@@ -65,7 +65,7 @@ export default {
 			if (!person) return unauthorized();
 			return asPerson(person, () => v1.fetch(request, env));
 		}
-		// agent-kit trusts the caller headers, so its routes never answer on the public host.
+		// Beholder trusts the caller headers, so its routes never answer on the public host.
 		if (url.hostname === env.PUBLIC_HOST) return Response.json({ error: "Not found" }, { status: 404 });
 		return chat.fetch(request, env, ctx);
 	},

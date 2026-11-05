@@ -1,5 +1,5 @@
-// One agent, two doors: agent-kit's definition for the web app's chat, the Rubry spec for /v1.
-import type { AgentDefinition } from "@rubrion/agent-kit-server";
+// One agent, two doors: Beholder's definition for the web app's chat, the Rubry spec for /v1.
+import type { AgentDefinition } from "@rubrion/beholder-server";
 import { forgetResults, type AgentSpec } from "@rubrion/mastra-cloudflare";
 import { tools } from "./tools";
 

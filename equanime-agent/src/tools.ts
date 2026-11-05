@@ -1,7 +1,7 @@
 // The agent's tools: thin calls to equanime-api, which applies the rules. They return facts
 // already decided by the service, and { error } instead of throwing, so the agent explains it.
 import { env } from "cloudflare:workers";
-import { createTool, z } from "@rubrion/agent-kit-server";
+import { createTool, z } from "@rubrion/beholder-server";
 import { readFileTool, type LoadedFile } from "@rubrion/mastra-cloudflare";
 import { currentPerson } from "./caller";
 

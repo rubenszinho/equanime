@@ -3,8 +3,8 @@
 | Part | What | Runs on |
 |---|---|---|
 | `equanime-api/` | Hono + Zod OpenAPI Worker: analyses, rules, PDF, uploads | Cloudflare, `api.equanime.rubrion.ai` |
-| `equanime-web-client/` | Astro + React site, PT-BR; proxies `/api/*` to the API by service binding; the floating assistant (agent-kit) at `/api/agent/*` | Cloudflare, `equanime.rubrion.ai` (behind Access) |
-| `equanime-agent/` | The "Análise de Banca" agent (Mastra, Workers AI Gemma): agent-kit routes for the web chat (service binding only) and an OpenAI-compatible `/v1` | Cloudflare, `agent.equanime.rubrion.ai` (`/v1` only) |
+| `equanime-web-client/` | Astro + React site, PT-BR; proxies `/api/*` to the API by service binding; the floating assistant (Beholder) at `/api/agent/*` | Cloudflare, `equanime.rubrion.ai` (behind Access) |
+| `equanime-agent/` | The "Análise de Banca" agent (Mastra, Workers AI Gemma): Beholder routes for the web chat (service binding only) and an OpenAI-compatible `/v1` | Cloudflare, `agent.equanime.rubrion.ai` (`/v1` only) |
 | `equanime-collector/` | FastAPI: CNPq's institutional Lattes extractor, SQLite job queue | Docker on oracle-rubrion-1, tunnel `equanime-collector.rubrion.ai` (Access service token) |
 
 ## An analysis
@@ -71,7 +71,7 @@ Tailwind is limited to the kit (`styles/agent.css`); the site's CSS sits in `@la
 
 The brand: a balance whose beam is the circumflex of "Equânime" (`components/Mark.astro`,
 the wordmark's â in `layouts/Layout.astro`, `public/favicon.svg`). The assistant is the same
-balance in a notary seal (`components/Seal.tsx`, passed as agent-kit's `renderMascot`): it
+balance in a notary seal (`components/Seal.tsx`, passed as Beholder's `renderMascot`): it
 weighs while thinking, turns its edge during a tool call, pulses its pivot while writing.
 Rubry's listing uses the seal (`rubry-web/public/logos/equanime.svg`).
 

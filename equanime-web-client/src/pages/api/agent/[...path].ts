@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
-import { createAgentGateway } from "@rubrion/agent-kit-server/gateway";
+import { createAgentGateway } from "@rubrion/beholder-server/gateway";
 import { accessEmail, displayName } from "../../../lib/access";
 
 export const prerender = false;

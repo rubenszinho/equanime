@@ -22,8 +22,8 @@
 	"dependencies": {
 		"@astrojs/cloudflare": "^14.3.4",
 		"@astrojs/react": "^7.0.1",
-		"@rubrion/agent-kit-react": "^0.2.0",
-		"@rubrion/agent-kit-server": "^0.1.0",
+		"@rubrion/beholder-react": "^0.4.1",
+		"@rubrion/beholder-server": "^0.4.1",
 		"@tailwindcss/vite": "^4.3.3",
 		"astro": "^7.3.8",
 		"jose": "^6.2.14",

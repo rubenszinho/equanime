@@ -1,4 +1,4 @@
-import { AgentProvider, AssistantScreen, ChatBox, ptBR } from "@rubrion/agent-kit-react";
+import { AgentProvider, AssistantScreen, ChatBox, ptBR } from "@rubrion/beholder-react";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { assistant } from "../data/copy";

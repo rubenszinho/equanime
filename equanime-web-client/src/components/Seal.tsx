@@ -1,4 +1,4 @@
-import type { Phase } from "@rubrion/agent-kit-react";
+import type { Phase } from "@rubrion/beholder-react";
 
 // The assistant: the balance inside a notary seal, the same stamp the verdicts carry. The beam is
 // the circumflex of "Equânime"; thinking weighs (the beam rocks, the pans rise and fall), a tool

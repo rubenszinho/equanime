@@ -4,7 +4,7 @@ The PT-BR site at `equanime.rubrion.ai`: landing page, board form, analysis page
 (progress, verdicts, evidence, CV uploads, PDF). Astro with React islands on a
 Cloudflare Worker; `/api/*` is proxied to `equanime-api` through a service binding,
 so the browser never talks to the API across origins. The floating assistant
-(`components/Assistant.tsx`, agent-kit) talks to `equanime-agent` through `/api/agent/*`;
+(`components/Assistant.tsx`, Beholder) talks to `equanime-agent` through `/api/agent/*`;
 its paperclip sends a Lattes XML/ZIP to `/curriculos` and any other file to `/documentos`.
 
 ```bash
