@@ -1,7 +1,7 @@
 // Records the segments of the Equânime videos against a local stack (see README.md).
 //   node record.mjs <outDir> [segment ...]     segments: intro demo end outro (default: all)
 // Each narration line is a `say()`: the subtitle, and the line the narrator reads.
-import { record } from "./lib/rec.mjs";
+import { record, warm } from "./lib/rec.mjs";
 
 const WEB = process.env.WEB ?? "http://localhost:4323";
 const CARDS = new URL("./cards/cards.html", import.meta.url).href;
@@ -257,6 +257,85 @@ const outro = async (r) => {
 	await r.sleep(2500);
 };
 
+// ---------------------------------------------------------------- curta (the presentation, under a minute)
+const curta = async (r) => {
+	const { page } = r;
+	let next = await cards(r, "a4g");
+	await next(4);
+	await r.say("O Agents4Gov, um projeto PUB do ICMC-USP, usa IA para apoiar o servidor público em tarefas repetitivas.");
+
+	next = await cards(r, "lib");
+	await next(8);
+	await r.say("Uma das ferramentas checava conflito de interesses em bancas, pelo Lattes.");
+
+	next = await cards(r, "grow");
+	await next();
+	await r.say("Mas exigia acesso ao CNPq, regras auditáveis e um assistente.");
+	for (let i = 0; i < 6; i++) { await r.sleep(380); await next(); }
+
+	next = await cards(r, "shift");
+	await next(3);
+	await r.say("Virou uma plataforma: a Equânime.");
+	await r.sleep(900); await next();
+
+	await r.settle();
+	await r.say("Você informa a banca, com o Lattes de cada pessoa…");
+	await page.goto(WEB + "/analises/nova");
+	await page.waitForSelector('form[data-hydrated="true"]');
+	await page.evaluate(() => { for (const b of document.querySelectorAll("button")) if (b.textContent?.includes("Preencher com um exemplo")) b.closest("p")?.remove(); });
+	await page.mouse.move(700, 300);
+	await showCursor(page);
+	await r.fast(5, async () => {
+		await r.type(page.getByLabel("Nome do candidato"), "João da Silva", { delay: 25 });
+		await r.type(page.getByLabel("Lattes do candidato"), "http://lattes.cnpq.br/1111111111111111", { delay: 10 });
+		await r.type(page.getByLabel("Nome do orientador"), "Maria Souza", { delay: 25 });
+		await r.type(page.getByLabel("Lattes do orientador"), "http://lattes.cnpq.br/2222222222222222", { delay: 10 });
+		await r.type(page.getByLabel("Nome do avaliador 1"), "Carlos Pereira", { delay: 25 });
+		await r.type(page.getByLabel("Lattes do avaliador 1"), "http://lattes.cnpq.br/3333333333333333", { delay: 10 });
+		await r.type(page.getByLabel("Nome do avaliador 2"), "Pedro Oliveira", { delay: 25 });
+		await r.type(page.getByLabel("Lattes do avaliador 2"), "http://lattes.cnpq.br/5555555555555555", { delay: 10 });
+		await r.click(page.getByRole("radiogroup", { name: "Papel do avaliador 2" }).getByText("Suplente"), { duration: 300 });
+		await r.click(page.getByRole("button", { name: "Analisar banca" }));
+		await page.waitForURL(/analises\/(?!nova)/);
+		await page.getByRole("heading", { name: "Titulares" }).waitFor({ timeout: 60_000 });
+	});
+
+	await r.say("…e recebe cada avaliador com a evidência do conflito.");
+	await r.moveTo(page.getByText("com possível conflito"));
+	await r.sleep(500);
+	await r.scroll(page.getByRole("heading", { name: "Carlos Pereira" }), { duration: 1100, offset: 70 });
+	await r.moveTo(page.getByText("Métodos de Inteligência Artificial para políticas públicas (2024)").first());
+
+	await r.say("Ou descreve a banca numa conversa com o assistente.");
+	await r.click(page.getByRole("button", { name: "Abrir o assistente" }), { duration: 500 });
+	const box = page.getByRole("region", { name: "Assistente" });
+	await box.waitFor();
+	await r.click(box.getByRole("button", { name: /Expandir/ }), { duration: 400 });
+	const dialog = page.getByRole("dialog", { name: "Assistente da Equânime" });
+	const input = dialog.getByRole("textbox").first();
+	await r.click(input, { duration: 400 });
+	const message = "Verifique esta banca de doutorado. Candidato: João da Silva, http://lattes.cnpq.br/1111111111111111. Orientadora: Maria Souza, http://lattes.cnpq.br/2222222222222222. Titular: Ana Santos, http://lattes.cnpq.br/4444444444444444. Suplente: Clara Nunes, http://lattes.cnpq.br/6666666666666666";
+	await r.fast(6, async () => {
+		await input.pressSequentially(message, { delay: 10 });
+		await page.keyboard.press("Enter");
+		await r.sleep(3000);
+		for (let i = 0; i < 240; i++) {
+			const streaming = await dialog.getByRole("button", { name: /Parar/i }).count();
+			if (!streaming && (await dialog.getByRole("link", { name: /PDF|relat/i }).count())) break;
+			await r.sleep(500);
+		}
+	});
+	await r.say("Ele analisa e responde com o relatório.");
+	await r.moveTo(dialog.getByText(/Ana Santos/).last());
+	await r.sleep(800);
+
+	next = await cards(r, "end");
+	await next(3);
+	await r.say("Equânime: apoio à decisão para bancas.");
+	await r.hush();
+	await r.sleep(1600);
+};
+
 // Earlier takes' conversations would show in the chat's sidebar.
 async function clearThreads() {
 	const threads = await (await fetch(`${WEB}/api/agent/threads`)).json();
@@ -286,6 +365,11 @@ async function inconclusiveBoard() {
 	return `${WEB}/analises/${analysis_id}`;
 }
 
+if (["demo", "curta"].some(want)) {
+	await warm([`${WEB}/`, `${WEB}/analises/nova`], async (page, url) => {
+		if (url.endsWith("/nova")) await page.waitForSelector('form[data-hydrated="true"]', { timeout: 120_000 });
+	});
+}
 if (want("intro")) await record("intro", outDir, intro);
 if (want("demo")) {
 	await clearThreads();
@@ -293,4 +377,8 @@ if (want("demo")) {
 	await record("demo", outDir, async (r) => { r.inconclusive = url; await demo(r); });
 }
 if (want("end")) await record("end", outDir, end);
+if (want("curta")) {
+	await clearThreads();
+	await record("curta", outDir, curta);
+}
 if (want("outro")) await record("outro", outDir, outro);

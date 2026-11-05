@@ -21,4 +21,4 @@ Same owner and habits as rubry-monorepo:
 - Rubry Hub listing once the repo is public.
 - Open the site to anonymous visitors (drop Access on the pages) and require login only for the
   assistant and the analyses, so anyone can see what Equânime is. The video modal is already there for them.
-- Record the voice-over for the videos (`video/out/.../roteiro.pt-BR.md`); then an English version.
+- The videos carry a synthetic voice (`video/tts.py`); a human voice-over can replace it (`roteiro.pt-BR.md`). Then an English version.

@@ -6,11 +6,13 @@
 Per segment: the fast spans are sped up (with a small "3×" badge) and the narration cues
 are mapped onto the edited timeline. Then the versions are joined with crossfades:
 
-    demo          demo + end                 (the site's first-visit modal)
-    apresentacao  intro + demo + outro       (with the Agents4Gov context)
+    demo                demo + end              (the site's first-visit modal, ~3 min)
+    apresentacao        curta                   (Agents4Gov → Equânime, under a minute)
+    apresentacao-longa  intro + demo + outro    (the full story, ~4.5 min)
 
-Each version comes out clean (.mp4), with burned-in captions (.legendado.mp4), with
-.srt/.vtt captions, plus a web cut for the site and the script with timecodes.
+Each version comes out voiced (.mp4, voice from tts.py), voiced with burned-in captions
+(.legendado.mp4), silent for a human narrator (.sem-voz.mp4), with .srt/.vtt captions, plus
+a web cut for the site and the script with timecodes.
 """
 import json
 import subprocess
@@ -23,8 +25,12 @@ BOLD = FONTS / "PublicSans-Bold.ttf"
 XFADE = 0.6
 VERSIONS = {
     "demo": ["demo", "end"],
-    "apresentacao": ["intro", "demo", "outro"],
+    "apresentacao": ["curta"],
+    "apresentacao-longa": ["intro", "demo", "outro"],
 }
+VOICE = ROOT / "out" / "voice"
+# Seconds cut from a segment's silent ending: the presentation slot is capped at one minute.
+TRIM_END = {"curta": 1.6}
 
 
 def run(*args):
@@ -61,6 +67,7 @@ def mapper(parts):
 
 def edit_segment(take, work, name):
     marks = json.loads((take / f"{name}.marks.json").read_text())
+    marks["duration"] -= TRIM_END.get(name, 0)
     parts = pieces(marks)
     raw = take / f"{name}.raw.mp4"
     chains, labels = [], []
@@ -144,30 +151,47 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     return cues
 
 
-def main(take, out):
+def voice(silent, cues, total, out):
+    """Lays each line's clip (tts.py) at its caption's start and adds the mix to the video."""
+    spoken = json.loads((VOICE / "durations.json").read_text(encoding="utf-8"))
+    clips = [(c["start"] + 0.08, VOICE / spoken[c["text"]]["file"]) for c in cues if c["text"] in spoken]
+    missing = [c["text"] for c in cues if c["text"] not in spoken]
+    if missing:
+        print(f"  no voice for {len(missing)} lines (run tts.py): {missing[:2]}")
+    inputs = sum((["-i", str(f)] for _, f in clips), [])
+    delays = ";".join(f"[{i + 1}:a]aresample=48000,adelay={int(t * 1000)}:all=1[a{i}]" for i, (t, _) in enumerate(clips))
+    mix = "".join(f"[a{i}]" for i in range(len(clips))) + f"amix=inputs={len(clips)}:normalize=0:dropout_transition=0,apad,atrim=0:{total:.3f},loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=out:st={total - 0.8:.3f}:d=0.8[aout]"
+    run("-i", silent, *inputs, "-filter_complex", f"{delays};{mix}", "-map", "0:v", "-map", "[aout]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", out)
+
+
+def main(take, out, *only):
     take, out = Path(take), Path(out)
     work = out / "work"
     work.mkdir(parents=True, exist_ok=True)
     edited = {}
-    needed = {n for v in VERSIONS.values() for n in v}
+    needed = {n for k, v in VERSIONS.items() if not only or k in only for n in v}
     for name in sorted(needed):
         if (take / f"{name}.marks.json").exists():
             edited[name] = edit_segment(take, work, name)
             print(f"edited {name}: {duration(edited[name][0]):.1f}s")
     script = ["# Equânime: roteiro de narração (pt-BR)", "", "Gerado por `video/build.py` a partir das falas em `video/record.mjs`.", ""]
     for version, names in VERSIONS.items():
+        if only and version not in only:
+            continue
         if not all(n in edited for n in names):
             print(f"skip {version}: missing {[n for n in names if n not in edited]}")
             continue
         base = out / f"equanime-{version}.pt-BR"
-        clean = Path(f"{base}.mp4")
-        starts, total = join([edited[n][0] for n in names], clean)
+        silent = Path(f"{base}.sem-voz.mp4")
+        starts, total = join([edited[n][0] for n in names], silent)
         cues = [dict(c, start=c["start"] + s, end=c["end"] + s) for n, s in zip(names, starts) for c in edited[n][1]]
         cues = write_captions(cues, base, total)
-        run("-i", clean, "-vf", f"subtitles={Path(f'{base}.ass')}:fontsdir={FONTS}", "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", base.parent / f"{base.name}.legendado.mp4")
+        clean = Path(f"{base}.mp4")
+        voice(silent, cues, total, clean)
+        run("-i", clean, "-vf", f"subtitles={Path(f'{base}.ass')}:fontsdir={FONTS}", "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart", base.parent / f"{base.name}.legendado.mp4")
         if version == "demo":
-            # The site's cut: 720p, small, captions as a track.
-            run("-i", clean, "-vf", "scale=1280:720:flags=lanczos", "-c:v", "libx264", "-preset", "slow", "-crf", "27", "-profile:v", "high", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out / "equanime-demo.web.mp4")
+            # The site's cut: 720p, small, silent (it plays muted), captions as a track.
+            run("-i", clean, "-vf", "scale=1280:720:flags=lanczos", "-c:v", "libx264", "-preset", "slow", "-crf", "27", "-profile:v", "high", "-pix_fmt", "yuv420p", "-an", "-movflags", "+faststart", out / "equanime-demo.web.mp4")
             run("-ss", "3.5", "-i", clean, "-frames:v", "1", "-vf", "scale=1280:720", "-q:v", "3", out / "equanime-demo.poster.jpg")
         script += [f"## {version} ({ts(total, '.')[3:8]})", "", "| Início | Fim | Fala |", "|---|---|---|"]
         script += [f"| {ts(c['start'], '.')[3:10]} | {ts(c['end'], '.')[3:10]} | {c['text']} |" for c in cues]
@@ -177,4 +201,4 @@ def main(take, out):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:3])
+    main(*sys.argv[1:])

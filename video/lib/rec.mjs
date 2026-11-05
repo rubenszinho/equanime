@@ -3,7 +3,7 @@
 // `say()` for each narration line and `fast()` around waits that the edit speeds up; the
 // cues and fast-forward spans go to <name>.marks.json for build.py.
 import { spawn } from "node:child_process";
-import { writeFileSync, mkdirSync, mkdtempSync } from "node:fs";
+import { writeFileSync, mkdirSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createRequire } from "node:module";
@@ -15,11 +15,17 @@ const { chromium } = require(PLAYWRIGHT);
 const DISPLAY = process.env.REC_DISPLAY ?? ":99";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Reading speed for a narration line: the line stays at least this long on screen.
-export const minSeconds = (text) => Math.max(2.6, text.length / 15 + 1.0);
+// A line stays on screen while it is spoken (out/voice/durations.json, from tts.py) and
+// at least as long as it takes to read.
+const VOICE = process.env.VOICE_DIR ?? new URL("../out/voice/", import.meta.url).pathname;
+let spoken = {};
+try { spoken = JSON.parse(readFileSync(join(VOICE, "durations.json"), "utf-8")); } catch {}
+export const minSeconds = (text) => Math.max(2.6, text.length / 15 + 1.0, (spoken[text]?.seconds ?? 0) + 0.35);
 
 // The cursor a viewer sees: Playwright's mouse never moves the X pointer, so the page draws one.
 const CURSOR = `
+// The site's first-visit video modal would cover every take.
+try { localStorage.setItem("equanime-intro-seen", "1"); } catch {}
 (() => {
 	const install = () => {
 		if (document.getElementById("__rec_cursor")) return;
@@ -55,6 +61,20 @@ const CURSOR = `
 	if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", install); else install();
 })();
 `;
+
+// Opens pages once, headless, so the dev server has compiled them (and Vite has optimized its
+// dependencies, which reloads the page) before a take.
+export async function warm(urls, ready = async () => {}) {
+	const browser = await chromium.launch();
+	const page = await browser.newPage();
+	await page.addInitScript(() => { try { localStorage.setItem("equanime-intro-seen", "1"); } catch {} });
+	for (const url of urls) {
+		await page.goto(url);
+		await page.waitForLoadState("networkidle").catch(() => {});
+		await ready(page, url);
+	}
+	await browser.close();
+}
 
 export async function record(name, outDir, scene, { colorScheme = "light" } = {}) {
 	mkdirSync(outDir, { recursive: true });
