@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
+// The first-visit video would cover the page.
+test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem("equanime-intro-seen", "1")));
+
 const person = (name: string, id: string, status = "complete", message: string | null = null) => ({ name, lattes_url: `http://lattes.cnpq.br/${id}`, collection_status: status, collection_message: message });
 const check = (result: string, extra = {}) => ({ detected: false, inconclusive: false, result, evidence: [], ...extra });
 

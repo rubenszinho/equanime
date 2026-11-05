@@ -1,0 +1,67 @@
+WEBVTT
+
+00:00:00.483 --> 00:00:07.067
+Toda banca precisa de uma conferência: algum avaliador tem vínculo com o candidato?
+
+00:00:07.067 --> 00:00:14.957
+A Equânime faz essa conferência a partir dos Currículos Lattes, e mostra a evidência de cada resultado.
+
+00:00:14.957 --> 00:00:22.050
+Na página inicial, um exemplo do que você recebe: cada pessoa da banca com o seu resultado.
+
+00:00:22.050 --> 00:00:30.253
+São três regras: coautoria com o candidato, relação recente com o orientador e projeto de pesquisa conjunto.
+
+00:00:30.253 --> 00:00:40.195
+As regras são aplicadas sempre da mesma forma. Um modelo de linguagem só ajuda a reconhecer o mesmo nome escrito de jeitos diferentes.
+
+00:00:40.195 --> 00:00:49.336
+Para começar uma análise, informe o candidato e o endereço do Currículo Lattes dele.
+
+00:00:49.336 --> 00:00:58.656
+Com orientador, a banca é tratada como acadêmica, e a relação de orientação também é verificada.
+
+00:00:58.656 --> 00:01:06.938
+Depois, os avaliadores, titulares e suplentes, cada um com o seu Lattes.
+
+00:01:06.938 --> 00:01:14.208
+Ao enviar, a Equânime lê os currículos e aplica as regras.
+
+00:01:14.208 --> 00:01:22.568
+O resumo mostra quantos avaliadores ficaram sem conflito identificado, com possível conflito ou inconclusivos.
+
+00:01:22.568 --> 00:01:30.992
+Cada possível conflito traz a evidência: a publicação, o projeto ou a orientação, e de qual currículo ela veio.
+
+00:01:30.992 --> 00:01:37.598
+Aqui, um suplente foi orientado no doutorado pela orientadora do candidato, em 2024.
+
+00:01:37.598 --> 00:01:46.598
+Sem conflito identificado quer dizer que nada apareceu nas fontes consultadas. Não é prova de que o conflito não existe.
+
+00:01:46.598 --> 00:01:54.529
+O relatório em PDF reúne tudo isso, pronto para anexar ao processo.
+
+00:01:54.529 --> 00:02:01.966
+Quando um currículo não pode ser lido, a pessoa fica como inconclusiva. Nunca como sem conflito.
+
+00:02:01.966 --> 00:02:07.831
+Basta enviar o XML baixado no próprio Lattes e analisar de novo.
+
+00:02:07.831 --> 00:02:13.836
+Tudo isso também funciona numa conversa, com o assistente Análise de Banca.
+
+00:02:13.836 --> 00:02:19.043
+Você descreve a banca do seu jeito, com os endereços do Lattes.
+
+00:02:19.043 --> 00:02:24.423
+O assistente cria a análise e acompanha a leitura dos currículos…
+
+00:02:24.423 --> 00:02:30.270
+…e responde com o resultado de cada avaliador e o link para o relatório.
+
+00:02:30.270 --> 00:02:37.173
+No mesmo chat, dá para anexar o edital ou a ata: o assistente tira a banca do documento.
+
+00:02:38.121 --> 00:02:45.355
+Equânime: apoio à decisão para bancas. Quem aprova a composição da banca é sempre uma pessoa.

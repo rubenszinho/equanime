@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Equânime — cartelas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=Spectral:ital,wght@0,500;0,600;1,500&family=JetBrains+Mono:wght@400;600&display=swap" />
+<style>
+	:root {
+		--paper: #f2f4f6; --sheet: #fff; --ink: #14233a; --ink-soft: #4e5b6e; --ink-faint: #7b8696;
+		--hair: #d5dbe3; --rule: #e6eaef; --stamp: #3a3fae; --ok: #1e6b4c; --ok-bg: #e5f1ea;
+		--flag: #a3321c; --flag-bg: #f8e7e2; --maybe: #8a6410; --maybe-bg: #f6eed9;
+		--display: "Spectral", Georgia, serif; --body: "Public Sans", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+	}
+	* { box-sizing: border-box; }
+	html, body { margin: 0; height: 100%; }
+	body { background: var(--paper); color: var(--ink); font: 400 20px/1.5 var(--body); overflow: hidden; }
+	.scene { position: fixed; inset: 0; display: none; padding: 64px 96px 120px; }
+	.scene.on { display: grid; }
+	h1, h2 { font-family: var(--display); font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; margin: 0; text-wrap: balance; }
+	h1 { font-size: 76px; }
+	h2 { font-size: 46px; }
+	.kicker { font: 600 15px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--stamp); }
+	.soft { color: var(--ink-soft); }
+	.mark { width: 112px; height: 112px; color: var(--stamp); }
+	.mark .beam { transform-origin: 16px 5px; animation: weigh 2.4s cubic-bezier(.5,0,.3,1) .2s both; }
+	@keyframes weigh { 0% { transform: rotate(-9deg); } 45% { transform: rotate(6deg); } 75% { transform: rotate(-2deg); } 100% { transform: rotate(0); } }
+	.word { font: 600 92px/1 var(--display); letter-spacing: -0.015em; }
+
+	/* Reveal: elements with data-step appear when the recorder calls next(). */
+	[data-step] { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
+	[data-step].shown { opacity: 1; transform: none; }
+	.dim { opacity: .35 !important; transition: opacity .6s; }
+
+	.center { place-content: center; justify-items: center; text-align: center; gap: 28px; }
+	.brand { display: flex; align-items: center; gap: 26px; }
+
+	.card { background: var(--sheet); border: 1px solid var(--hair); border-radius: 14px; box-shadow: 0 1px 0 rgba(20,35,58,.04), 0 18px 40px -22px rgba(20,35,58,.35); }
+
+	/* Agents4Gov */
+	.a4g { align-content: center; gap: 30px; max-width: 1180px; }
+	.a4g .lead { font-size: 30px; line-height: 1.4; max-width: 30ch; }
+	.org { display: flex; gap: 14px; flex-wrap: wrap; }
+	.pill { border: 1px solid var(--hair); background: var(--sheet); border-radius: 999px; padding: 8px 18px; font-weight: 600; font-size: 18px; }
+
+	/* chores */
+	.chores { align-content: center; gap: 34px; }
+	.tasks { display: grid; grid-template-columns: repeat(2, minmax(0, 520px)); gap: 18px; }
+	.task { padding: 22px 26px; display: flex; gap: 18px; align-items: center; font-size: 23px; }
+	.task .n { font: 600 16px/1 var(--mono); color: var(--stamp); background: #eceefe; border-radius: 8px; padding: 8px 10px; }
+
+	/* library */
+	.lib { grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+	.code { font: 400 21px/1.7 var(--mono); padding: 28px 30px; background: #14233a; color: #e6ebf2; border-radius: 14px; }
+	.code .c { color: #8f9bb0; } .code .k { color: #9fa4ff; } .code .s { color: #7fcfa6; }
+	.tools { display: grid; gap: 12px; }
+	.tool { padding: 16px 22px; display: flex; justify-content: space-between; align-items: baseline; gap: 18px; }
+	.tool code { font: 600 19px/1 var(--mono); }
+	.tool span { color: var(--ink-faint); font-size: 16px; }
+	.tool.hl { border-color: var(--stamp); box-shadow: 0 0 0 3px rgba(58,63,174,.18), 0 18px 40px -22px rgba(20,35,58,.35); }
+
+	/* growth */
+	.grow { grid-template-columns: 420px 1fr; gap: 64px; align-items: center; }
+	.core { padding: 30px; text-align: center; }
+	.core code { font: 600 24px/1.3 var(--mono); display: block; }
+	.core p { margin: 12px 0 0; color: var(--ink-soft); font-size: 18px; }
+	.needs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+	.need { padding: 18px 22px; font-size: 19px; line-height: 1.35; border-left: 4px solid var(--stamp); }
+	.need b { display: block; font-size: 20px; margin-bottom: 4px; }
+
+	/* lib → platform */
+	.shift { place-content: center; justify-items: center; gap: 44px; text-align: center; }
+	.arrow { display: flex; align-items: center; gap: 40px; }
+	.box { padding: 26px 34px; min-width: 300px; }
+	.box small { display: block; color: var(--ink-faint); font: 600 14px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 10px; }
+	.box strong { font: 600 32px/1.1 var(--display); }
+	.box.to { border-color: var(--stamp); }
+	.chev { font: 400 54px/1 var(--display); color: var(--stamp); }
+	.parts { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; max-width: 1200px; }
+	.part { padding: 14px 20px; text-align: left; min-width: 250px; }
+	.part b { display: block; font-size: 19px; } .part span { color: var(--ink-soft); font-size: 16px; }
+
+	/* doors */
+	.doors { align-content: center; gap: 40px; }
+	.row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+	.door { padding: 28px; display: grid; gap: 10px; }
+	.door .k { font: 600 14px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--stamp); }
+	.door strong { font: 600 28px/1.15 var(--display); }
+	.door p { margin: 0; color: var(--ink-soft); font-size: 18px; }
+
+	/* next */
+	.next { align-content: center; gap: 34px; }
+	.steps { display: grid; gap: 16px; max-width: 1150px; }
+	.stepx { padding: 22px 28px; display: grid; grid-template-columns: 56px 1fr; gap: 18px; align-items: center; font-size: 23px; }
+	.stepx .i { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: #eceefe; color: var(--stamp); font: 700 20px/1 var(--body); }
+	.stepx small { display: block; color: var(--ink-soft); font-size: 18px; margin-top: 4px; }
+
+	/* end */
+	.url { font: 600 34px/1 var(--body); color: var(--stamp); }
+	.credits { display: flex; gap: 48px; color: var(--ink-soft); font-size: 19px; }
+	.credits b { color: var(--ink); display: block; font-size: 21px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+	<symbol id="mark" viewBox="0 0 32 32">
+		<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M16 5v21.5M11.5 27.5h9" />
+			<g class="beam">
+				<path d="M5 13.5 16 5l11 8.5" />
+				<path d="M5 13.5 2.2 19.5M5 13.5 7.8 19.5M27 13.5 24.2 19.5M27 13.5 29.8 19.5" stroke-width="1.3" />
+				<path d="M1.2 19.5h7.6a3.8 3.3 0 0 1-7.6 0ZM23.2 19.5h7.6a3.8 3.3 0 0 1-7.6 0Z" fill="currentColor" fill-opacity="0.16" />
+			</g>
+			<circle cx="16" cy="5" r="1.8" fill="currentColor" stroke="none" />
+		</g>
+	</symbol>
+</svg>
+
+<!-- Demo opening -->
+<section class="scene center" id="title">
+	<div class="brand" data-step><svg class="mark"><use href="#mark" /></svg><span class="word">Equânime</span></div>
+	<h2 class="soft" data-step style="font-weight:500;max-width:22ch">Conflito de interesses em bancas, a partir do Currículo Lattes</h2>
+</section>
+
+<!-- Demo closing -->
+<section class="scene center" id="end">
+	<div class="brand" data-step><svg class="mark"><use href="#mark" /></svg><span class="word">Equânime</span></div>
+	<p class="soft" data-step style="font-size:28px;margin:0">Apoio à decisão para bancas. Quem aprova a banca é uma pessoa.</p>
+	<div class="url" data-step>equanime.rubrion.ai</div>
+</section>
+
+<!-- Context: Agents4Gov -->
+<section class="scene a4g" id="a4g">
+	<div class="kicker" data-step>Agents4Gov</div>
+	<h1 data-step style="max-width:18ch">Modelos de linguagem a serviço do setor público</h1>
+	<p class="lead soft" data-step>Ferramentas que tiram do servidor público o trabalho burocrático e repetitivo.</p>
+	<div class="org" data-step><span class="pill">LABIC</span><span class="pill">ICMC</span><span class="pill">Universidade de São Paulo</span></div>
+</section>
+
+<section class="scene chores" id="chores">
+	<h2 data-step style="max-width:24ch">Tarefas que se repetem todos os dias</h2>
+	<div class="tasks">
+		<div class="card task" data-step><span class="n">01</span>Buscar dados em várias fontes públicas</div>
+		<div class="card task" data-step><span class="n">02</span>Conferir documentos e currículos</div>
+		<div class="card task" data-step><span class="n">03</span>Cruzar informações entre pessoas e registros</div>
+		<div class="card task" data-step><span class="n">04</span>Registrar o que foi conferido, e de onde veio</div>
+	</div>
+</section>
+
+<section class="scene lib" id="lib">
+	<div style="display:grid;gap:26px">
+		<div class="kicker" data-step>Uma biblioteca em Python</div>
+		<h2 data-step>Cada tarefa vira uma ferramenta para o OpenWebUI</h2>
+		<pre class="code" data-step><span class="c"># Agents4GovApps</span>
+<span class="k">pip install</span> agents4gov-apps
+
+<span class="k">from</span> agents4gov_apps <span class="k">import</span> load_tool_instance
+tool = load_tool_instance(<span class="s">"lattes_coi_judge"</span>)</pre>
+	</div>
+	<div class="tools">
+		<div class="card tool" data-step><code>openalex_doi</code><span>publicações por DOI</span></div>
+		<div class="card tool" data-step><code>openml_search</code><span>bases de dados</span></div>
+		<div class="card tool" data-step><code>gnews_collector</code><span>notícias</span></div>
+		<div class="card tool hl" data-step><code>lattes_collector</code><span>currículos Lattes</span></div>
+		<div class="card tool hl" data-step><code>lattes_coi_judge</code><span>conflito de interesses</span></div>
+	</div>
+</section>
+
+<section class="scene grow" id="grow">
+	<div class="card core" data-step>
+		<div class="kicker" style="margin-bottom:14px">Issue #14</div>
+		<code>lattes_coi_judge</code>
+		<p>Conflito de interesses em bancas, a partir do Lattes</p>
+	</div>
+	<div class="needs">
+		<div class="card need" data-step><b>Acesso institucional</b>Extrator do CNPq, que só responde a IPs autorizados</div>
+		<div class="card need" data-step><b>Verificação humana</b>O Lattes pede captcha: o XML vem de quem baixou</div>
+		<div class="card need" data-step><b>Regras auditáveis</b>Três regras, sempre iguais, cada uma com a evidência</div>
+		<div class="card need" data-step><b>Relatório em PDF</b>Pronto para anexar ao processo</div>
+		<div class="card need" data-step><b>Dados com prazo</b>90 dias, e só quem criou abre a análise</div>
+		<div class="card need" data-step><b>Um assistente</b>Que recebe a banca numa conversa</div>
+	</div>
+</section>
+
+<section class="scene shift" id="shift">
+	<div class="arrow">
+		<div class="card box" data-step><small>Era</small><strong>uma função numa biblioteca</strong></div>
+		<div class="chev" data-step>→</div>
+		<div class="card box to" data-step><small>Virou</small><strong style="display:flex;align-items:center;gap:14px;justify-content:center"><svg style="width:44px;height:44px;color:var(--stamp)"><use href="#mark" /></svg>a plataforma Equânime</strong></div>
+	</div>
+	<div class="parts" data-step>
+		<div class="card part"><b>Site</b><span>a banca num formulário</span></div>
+		<div class="card part"><b>API OpenAPI</b><span>regras, PDF, envio do XML</span></div>
+		<div class="card part"><b>Assistente</b><span>Análise de Banca</span></div>
+		<div class="card part"><b>Coletor</b><span>extrator do CNPq com IP fixo</span></div>
+	</div>
+</section>
+
+<!-- Context: closing -->
+<section class="scene doors" id="doors">
+	<h2 data-step>Uma análise, várias portas</h2>
+	<div class="row3">
+		<div class="card door" data-step><span class="k">Web</span><strong>equanime.rubrion.ai</strong><p>Formulário, resultado por avaliador e o assistente.</p></div>
+		<div class="card door" data-step><span class="k">OpenAPI</span><strong>OpenWebUI do Agents4Gov</strong><p>A ferramenta e o assistente Análise de Banca, como pede a issue #14.</p></div>
+		<div class="card door" data-step><span class="k">Chat</span><strong>rubry.ai</strong><p>O mesmo assistente, chamado de outro produto.</p></div>
+	</div>
+	<p class="soft" data-step style="font-size:24px">As mesmas três regras e o mesmo relatório, por qualquer porta.</p>
+</section>
+
+<section class="scene next" id="next">
+	<div class="kicker" data-step>Próximos passos</div>
+	<div class="steps">
+		<div class="card stepx" data-step><span class="i">1</span><div>Site aberto a qualquer pessoa<small>Para conhecer a ferramenta antes de entrar</small></div></div>
+		<div class="card stepx" data-step><span class="i">2</span><div>Login só para usar<small>O assistente e as análises pedem a conta institucional</small></div></div>
+		<div class="card stepx" data-step><span class="i">3</span><div>Extrator do CNPq liberado para a USP<small>Os currículos passam a ser lidos sem o envio do XML</small></div></div>
+	</div>
+</section>
+
+<section class="scene center" id="credits">
+	<div class="brand" data-step><svg class="mark"><use href="#mark" /></svg><span class="word">Equânime</span></div>
+	<div class="url" data-step>equanime.rubrion.ai</div>
+	<div class="credits" data-step>
+		<div><b>Agents4Gov</b>LABIC · ICMC · USP</div>
+		<div><b>Equânime</b>Feito pela Rubrion</div>
+	</div>
+</section>
+
+<script>
+	// Inline the mark (CSS can't animate inside <use>).
+	const symbol = document.getElementById("mark");
+	document.querySelectorAll("svg > use[href='#mark']").forEach((u) => { const svg = u.parentNode; svg.setAttribute("viewBox", "0 0 32 32"); svg.innerHTML = symbol.innerHTML; });
+	let scene = null;
+	window.show = (id) => {
+		document.querySelectorAll(".scene").forEach((s) => s.classList.toggle("on", s.id === id));
+		scene = document.getElementById(id);
+		scene.querySelectorAll("[data-step]").forEach((el) => el.classList.remove("shown"));
+		// restart the balance's swing
+		scene.querySelectorAll(".beam").forEach((b) => { b.style.animation = "none"; b.getBoundingClientRect(); b.style.animation = ""; });
+	};
+	// Reveals the next n hidden steps of the current scene.
+	window.next = (n = 1) => {
+		const hidden = [...scene.querySelectorAll("[data-step]:not(.shown)")].slice(0, n);
+		hidden.forEach((el, i) => setTimeout(() => el.classList.add("shown"), i * 160));
+		return hidden.length;
+	};
+	window.all = () => window.next(99);
+	const id = new URLSearchParams(location.search).get("s");
+	if (id) { show(id); all(); }
+</script>
+</body>
+</html>

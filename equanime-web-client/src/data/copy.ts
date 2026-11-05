@@ -14,6 +14,7 @@ export const home = {
 	lead: "A Equânime lê os Currículos Lattes do candidato, do orientador e dos avaliadores, aplica três regras de conflito de interesses e entrega um relatório com cada evidência no lugar de onde veio.",
 	start: "Analisar uma banca",
 	how: "Ver como funciona",
+	video: "Ver o vídeo",
 	sheet: {
 		caption: "Exemplo de resultado",
 		kind: "Banca de doutorado",
@@ -179,6 +180,15 @@ export const view = {
 	},
 	failed: "A análise não foi concluída por um erro interno. Nenhuma ausência de conflito foi presumida.",
 	retry: "Tentar de novo",
+};
+
+export const intro = {
+	title: "A Equânime em três minutos",
+	lead: "Uma banca do formulário ao relatório, e a mesma análise feita numa conversa com o assistente.",
+	captions: "Português",
+	close: "Fechar o vídeo",
+	start: "Analisar uma banca",
+	later: "Agora não",
 };
 
 export const notFound = {

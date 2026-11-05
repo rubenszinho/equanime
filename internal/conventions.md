@@ -19,3 +19,6 @@ Same owner and habits as rubry-monorepo:
 - Register the tool and assistant in cortex's OpenWebUI with the advisor (`equanime-api/docs/cortex-validation.md`).
 - Issue #14's deadline (30/09/2026) has passed; report status on the issue.
 - Rubry Hub listing once the repo is public.
+- Open the site to anonymous visitors (drop Access on the pages) and require login only for the
+  assistant and the analyses, so anyone can see what Equânime is. The video modal is already there for them.
+- Record the voice-over for the videos (`video/out/.../roteiro.pt-BR.md`); then an English version.

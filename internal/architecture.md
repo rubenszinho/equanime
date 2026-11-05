@@ -5,6 +5,7 @@
 | `equanime-api/` | Hono + Zod OpenAPI Worker: analyses, rules, PDF, uploads | Cloudflare, `api.equanime.rubrion.ai` |
 | `equanime-web-client/` | Astro + React site, PT-BR; proxies `/api/*` to the API by service binding; the floating assistant (Beholder) at `/api/agent/*` | Cloudflare, `equanime.rubrion.ai` (behind Access) |
 | `equanime-agent/` | The "Análise de Banca" agent (Mastra, Workers AI Gemma): Beholder routes for the web chat (service binding only) and an OpenAI-compatible `/v1` | Cloudflare, `agent.equanime.rubrion.ai` (`/v1` only) |
+| `video/` | Playwright + ffmpeg scripts that record the PT-BR demo and presentation videos from the local stack (`video/README.md`) | locally |
 | `equanime-collector/` | FastAPI: CNPq's institutional Lattes extractor, SQLite job queue | Docker on oracle-rubrion-1, tunnel `equanime-collector.rubrion.ai` (Access service token) |
 
 ## An analysis
@@ -68,6 +69,9 @@ person); `/v1` is stateless (clients send the conversation). The widget is one R
 (`components/Assistant.tsx`): the floating `ChatBox` and the expanded `AssistantScreen`
 (`#assistente`) share one `AgentProvider`, so expanding keeps an answer arriving. Its
 Tailwind is limited to the kit (`styles/agent.css`); the site's CSS sits in `@layer site`.
+
+The first visit opens a modal with the demo video (`components/Intro.astro`, files in
+`public/video/`, recorded by `video/`); "Ver o vídeo" on the home page reopens it.
 
 The brand: a balance whose beam is the circumflex of "Equânime" (`components/Mark.astro`,
 the wordmark's â in `layouts/Layout.astro`, `public/favicon.svg`). The assistant is the same

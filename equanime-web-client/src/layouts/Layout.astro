@@ -3,6 +3,7 @@ import "../styles/global.css";
 import Mark from "../components/Mark.astro";
 import Theme from "../components/Theme.astro";
 import Assistant from "../components/Assistant";
+import Intro from "../components/Intro.astro";
 import { site } from "../data/copy";
 
 interface Props {
@@ -51,6 +52,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 			<slot />
 		</main>
 		<Assistant client:only="react" analysisId={analysisId} />
+		<Intro />
 		<footer class="wrap foot">
 			<span>{site.name}: apoio à decisão para bancas.</span>
 			<a href={site.byUrl}>{site.by}</a>

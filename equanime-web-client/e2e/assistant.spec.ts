@@ -2,6 +2,9 @@ import { expect, test } from "@playwright/test";
 
 test.use({ reducedMotion: "reduce" });
 
+// The first-visit video would cover the page.
+test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem("equanime-intro-seen", "1")));
+
 // The agent itself is stubbed: this checks the widget, not the model.
 test("the chat box expands into the assistant and back, on one conversation", async ({ page }) => {
 	await page.route("**/api/me", (route) => route.fulfill({ json: { email: "ana@usp.br", name: "Ana" } }));
