@@ -11,7 +11,7 @@ describe("who the agent acts for", () => {
 
 	it("maps each /v1 key to a person", () => {
 		expect(v1({ authorization: "Bearer rubry-key", "x-rubry-user": "Visitor-42" })).toBe("rubry:visitor-42");
-		expect(v1({ authorization: "Bearer rubry-key", "x-equanime-person": "Visitor-43" })).toBe("rubry:visitor-43");
+		expect(v1({ authorization: "Bearer rubry-key", "x-equanime-person": "Visitor-43" })).toBeNull();
 		expect(v1({ authorization: "Bearer rubry-key" })).toBeNull();
 		expect(v1({ authorization: "Bearer owui-key", "x-openwebui-user-email": "Ana@USP.br" })).toBe("openwebui:ana@usp.br");
 		expect(v1({ authorization: "Bearer owui-key" })).toBe("service:openwebui");

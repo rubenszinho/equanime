@@ -52,7 +52,7 @@ same person as in the web pages. Who the person is (`src/caller.ts`, AsyncLocalS
 | Door | Person |
 |---|---|
 | Web chat (`/api/agent/*` → gateway → service binding) | the Access email, checked again by the web Worker (`src/lib/access.ts`) |
-| `/v1` with `V1_KEY_RUBRY` (rubry.ai) | `rubry:<code>` from `X-Rubry-User` (rubry.ai's Hub: an HMAC per person and agent, never their account id; the old `X-Equanime-Person` is still read until rubry.ai's production stops sending it) |
+| `/v1` with `V1_KEY_RUBRY` (rubry.ai) | `rubry:<code>` from `X-Rubry-User` (rubry.ai's Hub: an HMAC per person and agent, never their account id) |
 | `/v1` with `V1_KEY_OPENWEBUI` | `openwebui:<email>` when OpenWebUI forwards user headers, else `service:openwebui` |
 
 Attachments in the web chat: a Lattes XML/ZIP goes to `POST /curriculos` (its

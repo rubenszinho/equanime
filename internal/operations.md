@@ -49,7 +49,7 @@ Never printed; through stdin (`printf '%s' "$V" | npx wrangler secret put NAME`)
 |---|---|
 | equanime-api | `OPENWEBUI_KEY`, `COLLECTOR_TOKEN`, `COLLECTOR_ACCESS_SECRET` (set straight from the token creation; only in the Worker, rotate the service token to copy it), `LLM_API_KEY` (not set yet) |
 | collector `.env` | `EQUANIME_COLLECTOR_TOKEN` (= `COLLECTOR_TOKEN`), `TUNNEL_TOKEN` |
-| equanime-agent | `AGENT_KEY` (also on equanime-api), `V1_KEY_RUBRY` (the key in rubry.ai's Hub listing `equanime`; also Infisical `rubry` `/rubry-agent/EQUANIME_API_KEY`), `V1_KEY_OPENWEBUI`; Infisical `/equanime-agent` |
+| equanime-agent | `AGENT_KEY` (also on equanime-api), `V1_KEY_RUBRY` (the key sealed in rubry.ai's Hub listing `equanime`; rotated 2026-11-12, not yet in Infisical: the old copy at `rubry` `/rubry-agent/EQUANIME_API_KEY` is stale. Rotating again: set it here and save it in the listing's Edit form, same value), `V1_KEY_OPENWEBUI`; Infisical `/equanime-agent` |
 
 ## After a deploy
 
