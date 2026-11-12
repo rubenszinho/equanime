@@ -1,7 +1,7 @@
 interface Secrets {
 	/** Shared with equanime-api: lets this Worker act for the person it talks to. */
 	AGENT_KEY: string;
-	/** /v1 keys: rubry-agent (sends X-Equanime-Person) and OpenWebUI. */
+	/** /v1 keys: rubry.ai's Agent Hub (sends X-Rubry-User) and OpenWebUI. */
 	V1_KEY_RUBRY?: string;
 	V1_KEY_OPENWEBUI?: string;
 }

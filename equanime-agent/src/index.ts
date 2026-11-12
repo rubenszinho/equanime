@@ -44,7 +44,10 @@ const PERSON = /^[a-z0-9][a-z0-9@._:+-]{1,180}$/;
 export function v1Person(request: Request, env: Env): string | null {
 	const key = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
 	if (env.V1_KEY_RUBRY && safeEqual(key, env.V1_KEY_RUBRY)) {
-		const id = request.headers.get("x-equanime-person")?.trim().toLowerCase() ?? "";
+		// rubry.ai's Agent Hub names who asks in X-Rubry-User (a code per person and agent, never
+		// their account). X-Equanime-Person is the header of the built-in entry it replaces; drop it
+		// once rubry.ai's production no longer sends it.
+		const id = (request.headers.get("x-rubry-user") ?? request.headers.get("x-equanime-person"))?.trim().toLowerCase() ?? "";
 		return PERSON.test(id) ? `rubry:${id}` : null;
 	}
 	if (env.V1_KEY_OPENWEBUI && safeEqual(key, env.V1_KEY_OPENWEBUI)) {
