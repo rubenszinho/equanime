@@ -14,7 +14,9 @@ Same owner and habits as rubry-monorepo:
 ## Open items
 
 - Deploy the collector on oracle-rubrion-1 (tunnel `equanime-collector-prod` exists, no connector yet).
-- USP/ICMC to request CNPq extractor access for `144.22.250.174`; production runs `COLLECTOR_MODE=upload` until then.
+- USP/ICMC to request CNPq extractor access for `144.22.250.174` (oracle-rubrion-1) or `143.107.183.253` (cortex.icmc.usp.br);
+  production runs `COLLECTOR_MODE=upload` until then. Tested 2026-11-20: cortex is not authorized either (`Serviço negado.IP:143.107.183.253`),
+  so the USP network alone does not open the extractor.
 - LLM for ambiguous names: set `LLM_BASE_URL`/`LLM_MODEL` and the `LLM_API_KEY` secret (Brad workspace).
 - Register the tool and assistant in cortex's OpenWebUI with the advisor (`equanime-api/docs/cortex-validation.md`).
 - Issue #14's deadline (30/09/2026) has passed; report status on the issue.

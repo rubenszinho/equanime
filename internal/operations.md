@@ -51,6 +51,12 @@ Never printed; through stdin (`printf '%s' "$V" | npx wrangler secret put NAME`)
 | collector `.env` | `EQUANIME_COLLECTOR_TOKEN` (= `COLLECTOR_TOKEN`), `TUNNEL_TOKEN` |
 | equanime-agent | `AGENT_KEY` (also on equanime-api), `V1_KEY_RUBRY` (the key sealed in rubry.ai's Hub listing `equanime`; rotated 2026-11-12, not yet in Infisical: the old copy at `rubry` `/rubry-agent/EQUANIME_API_KEY` is stale. Rotating again: set it here and save it in the listing's Edit form, same value), `V1_KEY_OPENWEBUI`; Infisical `/equanime-agent` |
 
+## cortex.icmc.usp.br
+
+ICMC's server (Agents4Gov's OpenWebUI, a Playwright MCP on port 35010). SSH needs the USP VPN:
+`sudo openfortivpn orion.uspnet.usp.br:31443 -u <Número USP>` (senha única) in a terminal of its own, then
+`ssh -i ~/.ssh/cortex_icmc <account ICMC gave>@cortex.icmc.usp.br`. Egress IPv4 `143.107.183.253`.
+
 ## After a deploy
 
 `curl https://api.equanime.rubrion.ai/health` → 200; then `docs/cortex-validation.md`.

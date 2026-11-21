@@ -71,6 +71,13 @@ def test_cnpq_answers() -> None:
     with pytest.raises(SourceError) as error:
         interpret(soap(""))
     assert error.value.type == "not_found"
+    # The same refusal zipped, as CNPq sent it to cortex.icmc.usp.br (2026-11-20).
+    refusal = io.BytesIO()
+    with zipfile.ZipFile(refusal, "w") as handle:
+        handle.writestr("0000000000000000_ERRO.xml", '<?xml version="1.0" encoding="ISO-8859-1"?><MENSAGEM><ERRO>Serviço negado.IP:143.107.183.253.</ERRO></MENSAGEM>'.encode("iso-8859-1"))
+    with pytest.raises(SourceError) as error:
+        interpret(soap(base64.b64encode(refusal.getvalue()).decode()))
+    assert error.value.type == "not_authorized"
     archive = io.BytesIO()
     with zipfile.ZipFile(archive, "w") as handle:
         handle.writestr("1111111111111111.xml", "<CURRICULO-VITAE/>")

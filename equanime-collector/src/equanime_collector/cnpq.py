@@ -7,8 +7,10 @@ which sit behind a captcha.
 """
 import base64
 from html import unescape
+import io
 import os
 import re
+import zipfile
 from urllib.request import Request, urlopen
 
 ENDPOINT = os.environ.get("EQUANIME_CNPQ_URL", "https://servicosweb.cnpq.br/srvcurriculo/WSCurriculo")
@@ -33,15 +35,28 @@ def interpret(body: str) -> bytes:
         raise SourceError("not_found", "O CNPq não devolveu este currículo.")
     value = unescape(match.group(1).strip())
     if value.startswith("<?xml") or "<ERRO>" in value:
-        error = re.search(r"<ERRO>(.*?)</ERRO>", value, re.S)
-        text = error.group(1).strip() if error else value
-        if "negado" in text.lower():
-            raise SourceError("not_authorized", "O extrator institucional do CNPq não autorizou este servidor.")
-        raise SourceError("not_found", f"O CNPq não devolveu este currículo: {text}")
+        refuse(value)
     try:
-        return base64.b64decode(value, validate=False)
+        archive = base64.b64decode(value, validate=False)
     except ValueError as error:
         raise SourceError("temporary_unavailable", "Resposta do CNPq ilegível.") from error
+    # CNPq also zips its refusals, as `<id>_ERRO.xml` (seen 2026-11-20 from cortex).
+    try:
+        with zipfile.ZipFile(io.BytesIO(archive)) as handle:
+            for name in handle.namelist():
+                if name.upper().endswith("_ERRO.XML"):
+                    refuse(handle.read(name).decode("iso-8859-1", errors="replace"))
+    except zipfile.BadZipFile:
+        pass
+    return archive
+
+
+def refuse(message: str) -> None:
+    error = re.search(r"<ERRO>(.*?)</ERRO>", message, re.S)
+    text = error.group(1).strip() if error else message
+    if "negado" in text.lower():
+        raise SourceError("not_authorized", "O extrator institucional do CNPq não autorizou este servidor.")
+    raise SourceError("not_found", f"O CNPq não devolveu este currículo: {text}")
 
 
 def fetch_zip(lattes_id: str, timeout: float = 60) -> bytes:
