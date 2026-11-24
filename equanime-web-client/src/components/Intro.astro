@@ -4,7 +4,7 @@
 import { intro } from "../data/copy";
 ---
 
-<dialog class="intro" aria-labelledby="intro-title" tabindex="-1" data-intro>
+<dialog class="intro-modal" aria-labelledby="intro-title" tabindex="-1" data-intro>
 	<div class="intro__head">
 		<div>
 			<h2 id="intro-title">{intro.title}</h2>
@@ -25,9 +25,9 @@ import { intro } from "../data/copy";
 </dialog>
 
 <style>
-	.intro { width: min(960px, 100% - 2rem); max-height: calc(100dvh - 2rem); padding: 0; border: 1px solid var(--hair); border-radius: 14px; background: var(--sheet); color: var(--ink); box-shadow: var(--shadow); overflow: auto; }
-	.intro:focus { outline: none; }
-	.intro::backdrop { background: rgba(15, 24, 40, 0.55); }
+	.intro-modal { width: min(960px, 100% - 2rem); max-height: calc(100dvh - 2rem); padding: 0; border: 1px solid var(--hair); border-radius: 14px; background: var(--sheet); color: var(--ink); box-shadow: var(--shadow); overflow: auto; }
+	.intro-modal:focus { outline: none; }
+	.intro-modal::backdrop { background: rgba(15, 24, 40, 0.55); }
 	.intro__head { display: flex; gap: 1rem; justify-content: space-between; align-items: flex-start; padding: 1.25rem 1.25rem 1rem; }
 	.intro__head h2 { font-size: clamp(1.3rem, 2.4vw, 1.7rem); }
 	.intro__head p { margin-top: 0.35rem; font-size: 0.95rem; }
