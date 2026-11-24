@@ -18,7 +18,8 @@ Same owner and habits as rubry-monorepo:
 
 - Deploy the collector with `EQUANIME_COLLECTOR_BACKEND=cnpq,busca`, then the API with `COLLECTOR_MODE=http`.
   Preferred host cortex.icmc.usp.br (USP IP; needs ICMC's OK to run a container and a cloudflared
-  connector there; test `pytest -m live_lattes` from it first); fallback oracle-rubrion-1 (tunnel
+  connector there; `busca` tested from it 2026-11-24: 3 CVs in a row, ~15 s each, no challenge;
+  a test copy sits in `~/equanime-test` of the ICMC account); fallback oracle-rubrion-1 (tunnel
   `equanime-collector-prod` exists, no connector yet).
 - USP/ICMC to request CNPq extractor access for `144.22.250.174` (oracle-rubrion-1) or `143.107.183.253` (cortex.icmc.usp.br);
   `busca` covers until then. Tested 2026-11-20: cortex is not authorized either (`Serviço negado.IP:143.107.183.253`),
