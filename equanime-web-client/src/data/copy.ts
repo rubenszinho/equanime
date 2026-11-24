@@ -39,7 +39,7 @@ export const home = {
 	stepsTitle: "Como funciona",
 	steps: [
 		{ title: "Informe a banca", body: "Candidato, avaliadores titulares e suplentes, cada um com o endereço do Currículo Lattes. Orientador e título são opcionais." },
-		{ title: "Os currículos são lidos", body: "Pelo extrator institucional do CNPq quando disponível. Quando um currículo não pode ser lido, você envia o XML que baixa no próprio Lattes." },
+		{ title: "Os currículos são lidos", body: "Automaticamente, na Plataforma Lattes do CNPq, em cerca de 20 segundos cada. Quando o Lattes pede uma verificação humana, você envia o XML que baixa no próprio currículo." },
 		{ title: "Você confere o relatório", body: "Cada avaliador recebe um resultado por regra, com a publicação, o projeto ou a orientação que o motivou. O PDF fica pronto para anexar ao processo." },
 	],
 	rulesTitle: "As três regras",
