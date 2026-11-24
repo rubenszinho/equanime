@@ -26,7 +26,7 @@ API `npm run typecheck && npm test`; collector `.venv/bin/pytest`; web `npm test
 
 ## Deploy
 
-Order: equanime-api (`npx wrangler d1 migrations apply DB --remote`, then `npx wrangler deploy`), then equanime-web-client (`npm run deploy`). Collector: `~/rubrion/infra/instances/oracle-rubrion-1/equanime-collector/README.md`.
+Order: equanime-api (`npx wrangler d1 migrations apply DB --remote`, then `npx wrangler deploy`), then equanime-web-client (`npm run deploy`). Collector: `~/rubrion/infra/instances/cortex-icmc/equanime-collector/README.md`.
 
 ## Cloudflare resources (created 2026-10-30)
 
@@ -53,9 +53,12 @@ Never printed; through stdin (`printf '%s' "$V" | npx wrangler secret put NAME`)
 
 ## cortex.icmc.usp.br
 
-ICMC's server (Agents4Gov's OpenWebUI, a Playwright MCP on port 35010). SSH needs the USP VPN:
+ICMC's server (Agents4Gov's OpenWebUI, a Playwright MCP on port 35010, and Equânime's collector:
+`~/rubrion/infra/instances/cortex-icmc/equanime-collector/README.md`). SSH needs the USP VPN:
 `sudo openfortivpn orion.uspnet.usp.br:31443 -u <Número USP>` (senha única) in a terminal of its own, then
 `ssh -i ~/.ssh/cortex_icmc <account ICMC gave>@cortex.icmc.usp.br`. Egress IPv4 `143.107.183.253`.
+**The VPN intercepts TLS** (Fortinet re-signs every HTTPS site): with it on, use only SSH; log in to
+Infisical, Cloudflare or deploy with Wrangler only with it off.
 
 ## After a deploy
 

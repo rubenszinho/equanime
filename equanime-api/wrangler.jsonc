@@ -19,9 +19,9 @@
 	"vars": {
 		"AUTH_MODE": "access",
 		"EXECUTION_MODE": "workflow",
-		// http: CNPq's institutional extractor through equanime-collector; upload: users send the XML.
-		// upload until CNPq authorizes the collector's IP; then http.
-		"COLLECTOR_MODE": "upload",
+		// http: equanime-collector on cortex.icmc.usp.br (CNPq's extractor, then CNPq's public search);
+		// upload: users send the XML. Either way a CV no source reads goes to upload.
+		"COLLECTOR_MODE": "http",
 		"COLLECTOR_URL": "https://equanime-collector.rubrion.ai",
 		// Access service token "equanime-api" (expires 2027-10-30); its secret is COLLECTOR_ACCESS_SECRET.
 		"COLLECTOR_ACCESS_ID": "7e587ca93589b6aa001b731fad18cc75.access",

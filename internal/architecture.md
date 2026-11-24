@@ -6,7 +6,7 @@
 | `equanime-web-client/` | Astro + React site, PT-BR; proxies `/api/*` to the API by service binding; the floating assistant (Beholder) at `/api/agent/*` | Cloudflare, `equanime.rubrion.ai` (behind Access) |
 | `equanime-agent/` | The "Análise de Banca" agent (Mastra, Workers AI Gemma): Beholder routes for the web chat (service binding only) and an OpenAI-compatible `/v1` | Cloudflare, `agent.equanime.rubrion.ai` (`/v1` only) |
 | `video/` | Playwright + ffmpeg scripts that record the PT-BR demo and presentation videos from the local stack (`video/README.md`) | locally |
-| `equanime-collector/` | FastAPI: CNPq's institutional extractor, then CNPq's public search (Playwright), SQLite job queue | Docker (not deployed yet; cortex.icmc.usp.br preferred, oracle-rubrion-1 fallback), tunnel `equanime-collector.rubrion.ai` (Access service token) |
+| `equanime-collector/` | FastAPI: CNPq's institutional extractor, then CNPq's public search (Playwright), SQLite job queue | cortex.icmc.usp.br (venv + cron, no Docker there; `~/rubrion/infra/instances/cortex-icmc/equanime-collector`), tunnel `equanime-collector.rubrion.ai` (Access service token); oracle-rubrion-1's Docker stack is the stopped fallback |
 
 ## An analysis
 
