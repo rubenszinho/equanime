@@ -45,3 +45,14 @@ answer differs between takes; check it before publishing.
   as `equanime-demo.pt-BR.vtt`.
 
 `out/` is not committed.
+
+## Onboarding video (2026-11-24)
+
+A newer end-user walkthrough (~3.5 min) and a 41 s ad, made with the `onboarding-promo-video`
+skill rather than this folder: ElevenLabs voice (`renato`), a composed track, a logo splash and
+two explainer scenes (first access; the assistant on the site, Agents4Gov's OpenWebUI and
+rubry.ai). Recorded from the local stack served under `equanime.rubrion.ai` (port 4399, fixture
+CVs); it covers the form, results and evidence, the PDF, sending the XML when Lattes asks for
+verification, the assistant, and data retention. The project, takes and outputs live outside
+the repo at `~/Videos/equanime-onboarding/{equanime,equanime-ad}` (`tour.mjs`, `subs.json`,
+`video.json`; `out/desktop/`).
