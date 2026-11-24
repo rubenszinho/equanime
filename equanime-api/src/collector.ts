@@ -5,8 +5,9 @@ import { envString } from "./settings";
 
 export type CollectionInput = { name: string; lattesUrl: string; lattesId: string };
 
-// A finished collection carries either a parsed CV (fixtures) or the Lattes XML
-// (the institutional extractor), which the API parses with the same code as uploads.
+// A finished collection carries either a parsed CV (fixtures, or CNPq's public CV page read
+// by the collector) or the Lattes XML (the institutional extractor), which the API parses
+// with the same code as uploads.
 export type CollectionResult =
 	| { done: false }
 	| { done: true; curriculum: Curriculum }

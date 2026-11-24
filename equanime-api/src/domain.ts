@@ -26,10 +26,11 @@ export const RESULT_LABELS = {
 
 export type ParticipantKind = "candidate" | "advisor" | "reviewer";
 export type ReviewerRole = "titular" | "suplente";
-// needs_upload: no automatic source could read the CV (captcha, no institutional access);
+// needs_upload: no automatic source could read the CV (a captcha challenge, no institutional access);
 // the user can send the Lattes XML and reprocess.
 export type CollectionStatus = "pending" | "complete" | "partial" | "failed" | "needs_upload";
-export type CurriculumSource = "fixture" | "upload" | "institutional_xml";
+// public_page: CNPq's CV page, opened through Busca Textual and parsed by the collector.
+export type CurriculumSource = "fixture" | "upload" | "institutional_xml" | "public_page";
 export type AnalysisType = "academic" | "selection";
 
 export type CurriculumWarning = { code: string; message: string };

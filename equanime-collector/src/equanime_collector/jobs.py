@@ -10,8 +10,10 @@ import sqlite3
 import threading
 from uuid import uuid4
 
+from equanime_collector.busca import fetch_cv_page
 from equanime_collector.cnpq import SourceError, fetch_zip
 from equanime_collector.curricula import fixture_curriculum, now, parse_lattes_id
+from equanime_collector.lattes_html import PageError, parse_cv_page
 
 DB_PATH = Path(os.environ.get("EQUANIME_COLLECTOR_DB", "jobs.sqlite"))
 # Finished jobs are kept a day: long enough for the API to poll, short for personal data.
@@ -29,6 +31,11 @@ def connect() -> sqlite3.Connection:
 
 def backend() -> str:
     return os.environ.get("EQUANIME_COLLECTOR_BACKEND", "fixture")
+
+
+def backends() -> list[str]:
+    """Sources tried in order, e.g. "cnpq,busca": the extractor, then CNPq's public search."""
+    return [item.strip() for item in backend().split(",") if item.strip()] or ["fixture"]
 
 
 def submit(db: sqlite3.Connection, name: str, lattes_url: str) -> str:
@@ -50,18 +57,35 @@ def get(db: sqlite3.Connection, job_id: str) -> dict | None:
 
 
 def collect(name: str, lattes_url: str) -> tuple[str, dict]:
-    if backend() == "fixture":
+    lattes_id = parse_lattes_id(lattes_url) or ""
+    error = SourceError("not_found", "Nenhuma fonte configurada leu este currículo.")
+    for source in backends():
+        try:
+            return "completed", collect_from(source, name, lattes_url, lattes_id)
+        except SourceError as failure:
+            error = failure
+    return "failed", {"error": {"type": error.type, "message": error.message}}
+
+
+def collect_from(source: str, name: str, lattes_url: str, lattes_id: str) -> dict:
+    if source == "fixture":
         curriculum = fixture_curriculum(name, lattes_url)
         if curriculum.collection_status in {"failed", "needs_upload"}:
-            return "failed", {"error": {"type": curriculum.error_type, "message": curriculum.error_message}}
-        return "completed", {"curriculum": curriculum.as_dict()}
-    lattes_id = parse_lattes_id(lattes_url)
-    try:
-        archive = fetch_zip(lattes_id or "")
-    except SourceError as error:
-        return "failed", {"error": {"type": error.type, "message": error.message}}
-    # The API parses the XML with the same code it uses for uploads.
-    return "completed", {"xml_base64": base64.b64encode(archive).decode()}
+            raise SourceError(curriculum.error_type or "not_found", curriculum.error_message or "Currículo indisponível.")
+        return {"curriculum": curriculum.as_dict()}
+    if source == "cnpq":
+        # The API parses the XML with the same code it uses for uploads.
+        return {"xml_base64": base64.b64encode(fetch_zip(lattes_id)).decode()}
+    if source == "busca":
+        html = fetch_cv_page(name, lattes_id)
+        try:
+            curriculum = parse_cv_page(html, requested_name=name, lattes_url=lattes_url, consulted_at=now())
+        except PageError as error:
+            raise SourceError("temporary_unavailable", f"A página do currículo não pôde ser lida: {error}") from error
+        if curriculum["lattes_id"] != lattes_id:
+            raise SourceError("not_found", "A página aberta não é a do currículo pedido.")
+        return {"curriculum": curriculum}
+    raise SourceError("not_found", f"Fonte desconhecida: {source}.")
 
 
 def work_once(db: sqlite3.Connection) -> bool:

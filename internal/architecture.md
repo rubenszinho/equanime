@@ -6,7 +6,7 @@
 | `equanime-web-client/` | Astro + React site, PT-BR; proxies `/api/*` to the API by service binding; the floating assistant (Beholder) at `/api/agent/*` | Cloudflare, `equanime.rubrion.ai` (behind Access) |
 | `equanime-agent/` | The "Análise de Banca" agent (Mastra, Workers AI Gemma): Beholder routes for the web chat (service binding only) and an OpenAI-compatible `/v1` | Cloudflare, `agent.equanime.rubrion.ai` (`/v1` only) |
 | `video/` | Playwright + ffmpeg scripts that record the PT-BR demo and presentation videos from the local stack (`video/README.md`) | locally |
-| `equanime-collector/` | FastAPI: CNPq's institutional Lattes extractor, SQLite job queue | Docker on oracle-rubrion-1, tunnel `equanime-collector.rubrion.ai` (Access service token) |
+| `equanime-collector/` | FastAPI: CNPq's institutional extractor, then CNPq's public search (Playwright), SQLite job queue | Docker (not deployed yet; cortex.icmc.usp.br preferred, oracle-rubrion-1 fallback), tunnel `equanime-collector.rubrion.ai` (Access service token) |
 
 ## An analysis
 
@@ -24,12 +24,18 @@
 - **CNPq institutional extractor** (`WSCurriculo.getCurriculoCompactado`), through the collector.
   CNPq answers only IPs it authorized for an institution (`Serviço negado.IP:…`), and Workers
   have no fixed egress IP: that is the only reason the collector exists.
+  Not authorized for Rubrion's IPs nor cortex's yet (tested 2026-11-20).
+- **CNPq's public search** (`busca`, collector): home page → Busca Textual → the name →
+  the result whose CV carries the requested ID. The search's invisible reCAPTCHA gives the
+  CV link its token, so no challenge shows on a normal visit (found by the advisor, tested
+  2026-11-23). The collector reads the HTML into a Curriculum (`source: public_page`,
+  co-authors in citation form, IDs where CNPq links them). A challenge → `captcha_required`
+  → upload. A CV URL opened directly shows the reCAPTCHA checkbox; the collector never does that.
 - **Upload**: the user downloads the XML from the CV page (passing Lattes' captcha themselves)
   and sends it on the analysis page (`POST /curriculos`, then `reprocessar`).
-- The public CV pages are captcha-gated; Equânime never automates them.
 - A CV no source read is `needs_upload` → reviewer `inconclusive`, never "no conflict".
 
-Parsing (`src/lattes.ts`) happens in the Worker for both sources: ISO-8859-1, ZIP, CNPq IDs
+Parsing of XML (`src/lattes.ts`) happens in the Worker, for the extractor and uploads alike: ISO-8859-1, ZIP, CNPq IDs
 on authors and project members (identity by ID first, names as fallback), concluded and
 ongoing advising, the person's own degrees and advisors.
 

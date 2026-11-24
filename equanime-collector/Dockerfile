@@ -10,7 +10,11 @@ WORKDIR /app
 COPY equanime-collector/pyproject.toml equanime-collector/README.md ./
 COPY equanime-collector/src ./src
 COPY fixtures ./fixtures
-RUN pip install --no-cache-dir . && useradd --uid 10001 --no-create-home collector && mkdir /data && chown collector /data
+# Chromium for the `busca` source (CNPq's public search), installed where the collector user can read it.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN apt-get update && apt-get install -y --no-install-recommends libatomic1 && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir . && playwright install --with-deps --only-shell chromium \
+    && useradd --uid 10001 --create-home collector && mkdir /data && chown collector /data
 
 USER collector
 EXPOSE 8090
