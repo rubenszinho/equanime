@@ -33,6 +33,7 @@ EQUANIME_COLLECTOR_AUTH=dev .venv/bin/uvicorn equanime_collector.main:app --app-
 |---|---|
 | `EQUANIME_COLLECTOR_BACKEND` | Sources in order, comma-separated: `fixture`, `cnpq`, `busca` (production: `cnpq,busca`) |
 | `EQUANIME_BUSCA_MAX_RESULTS` | Same-name results `busca` opens before giving up (5) |
+| `EQUANIME_BUSCA_ATTEMPTS` | Fresh sessions `busca` tries when CNPq's server fails to render the results ("Stale file handle" in place of the list), before `temporary_unavailable` (3) |
 | `EQUANIME_COLLECTOR_TOKEN` | Bearer token the API sends (`COLLECTOR_TOKEN` there) |
 | `EQUANIME_COLLECTOR_AUTH` | `dev` skips the token when none is set; anything else requires it |
 | `EQUANIME_COLLECTOR_DB` | SQLite job queue; finished jobs are deleted after a day |

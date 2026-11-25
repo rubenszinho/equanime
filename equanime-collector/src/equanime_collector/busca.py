@@ -61,61 +61,87 @@ def page_id(html: str) -> str | None:
     return match.group(1) if match else None
 
 
+class Faulty(Exception):
+    """CNPq's server failed to render the results (one of its nodes answers "Stale file handle")."""
+
+
+# Fresh sessions to try when CNPq's server fails to render the results; another try usually
+# lands on a healthy node.
+ATTEMPTS = int(os.environ.get("EQUANIME_BUSCA_ATTEMPTS", "3"))
+REPORTED = re.compile(r"Resultado de \d+ - \d+ de (\d+)")
+
+
 def fetch_cv_page(name: str, lattes_id: str) -> str:
     """The CV page's HTML for `lattes_id`, found by searching `name`."""
     from playwright.sync_api import Error as PlaywrightError, sync_playwright
 
     try:
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
-            try:
-                context = browser.new_context(locale="pt-BR", timezone_id="America/Sao_Paulo")
-                context.set_default_timeout(TIMEOUT_MS)
-                page = context.new_page()
-                # The home page sets the cookies the search expects.
-                page.goto(HOME, wait_until="domcontentloaded")
-                pause()
-                page.goto(SEARCH, wait_until="domcontentloaded")
-                stop_if_challenged(page)
-                pause()
-                box = page.locator("#textoBusca")
-                box.click()
-                box.press_sequentially(name, delay=random.randint(80, 160))
-                pause(0.4, 1.0)
-                page.locator("#botaoBuscaFiltros").first.click()
-                page.wait_for_load_state("domcontentloaded")
-                pause(1.5, 2.5)
-                stop_if_challenged(page)
-                results = page.locator(".resultado li a")
-                count = results.count()
-                if count == 0:
-                    raise SourceError("not_found", f"A busca do CNPq não encontrou currículos para o nome {name}.")
-                for index in by_likeness(name, results.all_inner_texts())[:MAX_OPENED]:
-                    results.nth(index).click()
-                    opener = page.locator("#idbtnabrircurriculo")
-                    opener.wait_for(state="visible")
-                    pause()
-                    with context.expect_page() as popup:
-                        opener.click()
-                    cv = popup.value
-                    cv.wait_for_load_state("domcontentloaded")
-                    pause(1.0, 2.0)
-                    stop_if_challenged(cv)
-                    html = cv.content()
-                    cv.close()
-                    if page_id(html) == lattes_id:
-                        return html
-                    # Another person with the same name: close the preview, try the next one.
-                    page.keyboard.press("Escape")
-                    closer = page.locator("#idbtnfechar, a:has-text('Fechar')").first
-                    if closer.is_visible():
-                        closer.click()
-                    pause()
-                raise SourceError(
-                    "not_found",
-                    f"A busca do CNPq por {name} não trouxe o currículo {lattes_id} entre os {min(count, MAX_OPENED)} primeiros resultados.",
-                )
-            finally:
-                browser.close()
+            for attempt in range(ATTEMPTS):
+                browser = playwright.chromium.launch(headless=True)
+                try:
+                    return search(browser, name, lattes_id)
+                except Faulty:
+                    if attempt == ATTEMPTS - 1:
+                        raise SourceError("temporary_unavailable", "O site do CNPq falhou ao mostrar o resultado da busca. Tente de novo em alguns minutos.")
+                    pause(4.0, 8.0)
+                finally:
+                    browser.close()
     except PlaywrightError as error:
         raise SourceError("temporary_unavailable", "O site do CNPq não respondeu como esperado.") from error
+    raise AssertionError("unreachable")
+
+
+def search(browser, name: str, lattes_id: str) -> str:
+    context = browser.new_context(locale="pt-BR", timezone_id="America/Sao_Paulo")
+    context.set_default_timeout(TIMEOUT_MS)
+    page = context.new_page()
+    # The home page sets the cookies the search expects.
+    page.goto(HOME, wait_until="domcontentloaded")
+    pause()
+    page.goto(SEARCH, wait_until="domcontentloaded")
+    stop_if_challenged(page)
+    pause()
+    box = page.locator("#textoBusca")
+    box.click()
+    box.press_sequentially(name, delay=random.randint(80, 160))
+    pause(0.4, 1.0)
+    # The results are a new page that can take a few seconds: wait for it, not a fixed pause.
+    with page.expect_navigation(wait_until="domcontentloaded"):
+        page.locator("#botaoBuscaFiltros").first.click()
+    page.locator(".resultado").first.wait_for(state="attached")
+    pause(1.0, 2.0)
+    stop_if_challenged(page)
+    results = page.locator(".resultado li a")
+    count = results.count()
+    text = page.locator("body").inner_text()
+    reported = REPORTED.search(text)
+    if "Stale file handle" in text or (count == 0 and reported and int(reported.group(1)) > 0):
+        raise Faulty()
+    if count == 0:
+        raise SourceError("not_found", f"A busca do CNPq não encontrou currículos para o nome {name}.")
+    for index in by_likeness(name, results.all_inner_texts())[:MAX_OPENED]:
+        results.nth(index).click()
+        opener = page.locator("#idbtnabrircurriculo")
+        opener.wait_for(state="visible")
+        pause()
+        with context.expect_page() as popup:
+            opener.click()
+        cv = popup.value
+        cv.wait_for_load_state("domcontentloaded")
+        pause(1.0, 2.0)
+        stop_if_challenged(cv)
+        html = cv.content()
+        cv.close()
+        if page_id(html) == lattes_id:
+            return html
+        # Another person with the same name: close the preview, try the next one.
+        page.keyboard.press("Escape")
+        closer = page.locator("#idbtnfechar, a:has-text('Fechar')").first
+        if closer.is_visible():
+            closer.click()
+        pause()
+    raise SourceError(
+        "not_found",
+        f"A busca do CNPq por {name} não trouxe o currículo {lattes_id} entre os {min(count, MAX_OPENED)} primeiros resultados.",
+    )
