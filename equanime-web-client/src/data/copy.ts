@@ -226,6 +226,9 @@ export const login = {
 		link: "Esqueci a senha",
 		back: "Voltar para entrar",
 	},
+	google: "Entrar com Google",
+	or: "ou com e-mail e senha",
+	googleFailed: "Não foi possível entrar com o Google. Tente de novo ou use e-mail e senha.",
 	name: "Nome",
 	email: "E-mail",
 	password: "Senha",
@@ -254,6 +257,7 @@ export const account = {
 	deleteTitle: "Apagar a conta",
 	deleteLead: "Apaga a conta e todas as suas análises, currículos enviados e relatórios. Não pode ser desfeito.",
 	deletePassword: "Senha para confirmar",
+	deleteType: "Digite APAGAR para confirmar",
 	deleteSubmit: "Apagar a conta e as análises",
 	admin: "Administração",
 };

@@ -84,6 +84,8 @@
 	.box h1 { font-size: clamp(1.7rem, 4vw, 2.2rem); }
 	.box h2 { font-size: 1.3rem; }
 	.login .btn--primary { justify-self: start; }
+	.login .google { justify-self: stretch; }
+	.login__or { text-align: center; max-width: none; }
 	.login__links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; color: var(--ink-soft); }
 	.link { padding: 0; border: 0; background: none; color: var(--stamp); font: inherit; text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px; cursor: pointer; min-height: 0; overflow-wrap: anywhere; text-align: left; }
 	.credits { font: 600 1.6rem/1.2 var(--font-display); }

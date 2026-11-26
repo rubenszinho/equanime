@@ -101,7 +101,11 @@ keeps the session token in the HttpOnly cookie `eq_u` and calls the API with `Be
 `X-Equanime-Session` (`equanime-web-client/src/lib/session.ts`); the API resolves the session to the
 email, which stays the analyses' `actor`. `src/middleware.ts` sends private pages (`/analises*`,
 `/conta`, `/admin`) to `/entrar`. Codes come from `no-reply@rubrion.ai` (Email Sending, `EMAIL`);
-`OTP_LOG=1` logs them locally. Turnstile guards sign-up and "forgot" once `TURNSTILE_SITE_KEY` and
+`OTP_LOG=1` logs them locally. "Entrar com Google" (`src/lib/google.ts`, `/api/conta/google`) reuses the
+OAuth client Access had (GCP `rubrion`, redirect `https://equanime.rubrion.ai/api/conta/google/retorno`);
+a Google-verified email is a confirmed account (an unconfirmed one with that email loses its password),
+and Google-only accounts confirm deletion by typing APAGAR. The button shows only with
+`GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` set on the web Worker. Turnstile guards sign-up and "forgot" once `TURNSTILE_SITE_KEY` and
 `TURNSTILE_SECRET` are set on the web Worker.
 
 Who pays (`payerFor`): emails on `FREE_DOMAINS` (`usp.br`, any subdomain) use it without limit;

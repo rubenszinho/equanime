@@ -73,6 +73,23 @@ describe("accounts", () => {
 		expect((await call("/conta", { session: token })).status).toBe(200);
 	});
 
+	it("signs in with Google: creates a confirmed account, and takes over an unconfirmed one without its password", async () => {
+		const google = await call("/conta/acesso", { body: { action: "google", email: "Gil@usp.br", name: "Gil Souza" } });
+		expect(google.status).toBe(200);
+		const { token } = await google.json<{ token: string }>();
+		expect(await (await call("/conta", { session: token })).json()).toMatchObject({ email: "gil@usp.br", name: "Gil Souza", confirmed: true, unlimited: true, has_password: false });
+		// No password matches a Google-only account.
+		expect((await call("/conta/acesso", { body: { action: "login", email: "gil@usp.br", password: "google" } })).status).toBe(401);
+		// Someone registered this email first but never confirmed it: Google's word wins, their password and session go.
+		const squatter = await (await call("/conta/acesso", { body: { action: "register", name: "Outro", email: "hana@usp.br", password: "senha-do-outro" } })).json<{ token: string }>();
+		expect((await call("/conta/acesso", { body: { action: "google", email: "hana@usp.br", name: "Hana" } })).status).toBe(200);
+		expect((await call("/conta", { session: squatter.token })).status).toBe(401);
+		expect((await call("/conta/acesso", { body: { action: "login", email: "hana@usp.br", password: "senha-do-outro" } })).status).toBe(401);
+		// Deleting a Google-only account asks for APAGAR.
+		expect((await call("/conta", { method: "DELETE", body: { password: "x" }, session: token })).status).toBe(401);
+		expect((await call("/conta", { method: "DELETE", body: { password: "apagar" }, session: token })).status).toBe(200);
+	});
+
 	it("resets a password by code, signing out the other sessions", async () => {
 		const token = await account("bia@usp.br");
 		expect((await call("/conta/acesso", { body: { action: "forgot", email: "bia@usp.br" } })).status).toBe(200);

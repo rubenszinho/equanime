@@ -15,6 +15,8 @@ export type Account = {
 	unlimited: boolean;
 	credits: number | null;
 	admin: boolean;
+	/** False for accounts that only sign in with Google. */
+	has_password?: boolean;
 	retention_days: number;
 	history: Array<{ kind: string; n: number; analysis_id: string | null; note: string | null; created: string }>;
 };

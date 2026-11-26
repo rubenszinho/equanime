@@ -79,8 +79,8 @@ export default function Account({ data }: { data: AccountData }) {
 				<p className="soft">{copy.deleteLead}</p>
 				<form onSubmit={remove} className="account__delete">
 					<label className="field">
-						<span>{copy.deletePassword}</span>
-						<input type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} />
+						<span>{data.has_password === false ? copy.deleteType : copy.deletePassword}</span>
+						<input type={data.has_password === false ? "text" : "password"} autoComplete={data.has_password === false ? "off" : "current-password"} required value={password} onChange={(event) => setPassword(event.target.value)} />
 					</label>
 					{error ? <p className="error" role="alert">{error}</p> : null}
 					<button type="submit" className="btn btn--danger btn--small" disabled={busy || !password} aria-busy={busy}>{copy.deleteSubmit}</button>

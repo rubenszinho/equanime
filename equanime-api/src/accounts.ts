@@ -74,6 +74,30 @@ export async function createUser(db: D1Database, input: { email: string; name: s
 	return result.meta.changes === 1 ? id : null;
 }
 
+// Accounts that only sign in with Google keep this instead of a hash: no password matches it.
+export const NO_PASSWORD = "google";
+
+/**
+ * The account for an email Google vouched for: created confirmed, or confirmed now. An unconfirmed
+ * account's password was never proven to be the owner's, so it is dropped with its sessions.
+ */
+export async function googleUser(db: D1Database, email: string, name: string): Promise<string> {
+	const now = new Date().toISOString();
+	const existing = await userByEmail(db, email);
+	if (!existing) {
+		const id = crypto.randomUUID();
+		await db.prepare("INSERT INTO users (id, email, name, pass, email_ok, created) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(email) DO NOTHING").bind(id, email, name || email.split("@")[0], NO_PASSWORD, now, now).run();
+		return (await userByEmail(db, email))!.id;
+	}
+	if (!existing.email_ok) {
+		await db.batch([
+			db.prepare("UPDATE users SET email_ok = ?, pass = ? WHERE id = ?").bind(now, NO_PASSWORD, existing.id),
+			db.prepare("DELETE FROM sessions WHERE user_id = ?").bind(existing.id),
+		]);
+	}
+	return existing.id;
+}
+
 export async function startSession(db: D1Database, userId: string): Promise<string> {
 	const token = hex(crypto.getRandomValues(new Uint8Array(32)));
 	await db.batch([

@@ -11,7 +11,7 @@
 import { Hono } from "hono";
 import type { Actor } from "../auth";
 import {
-	balance, checkPassword, cooling, createUser, endSession, forget, freeDomain, grant, hashPassword, history, isAdmin,
+	balance, checkPassword, cooling, createUser, endSession, forget, freeDomain, googleUser, grant, hashPassword, history, isAdmin, NO_PASSWORD,
 	MIN_PASSWORD, newCode, normalEmail, startSession, take, useCode, userByEmail, validEmail, type User,
 } from "../accounts";
 import { emailCode } from "../mail";
@@ -42,6 +42,7 @@ async function view(env: CloudflareBindings, user: User) {
 		unlimited: Boolean(institution),
 		credits: institution ? null : await balance(env.DB, user.id),
 		admin: isAdmin(env, user.email),
+		has_password: (await env.DB.prepare("SELECT pass FROM users WHERE id = ?").bind(user.id).first<{ pass: string }>())?.pass !== NO_PASSWORD,
 		retention_days: Number(env.RETENTION_DAYS || "90"),
 		history: institution ? [] : await history(env.DB, user.id),
 	};
@@ -102,6 +103,14 @@ accountRoutes.post("/conta/acesso", async (c) => {
 			await forget(c.env.DB, `e:${email}`, "fail");
 			return c.json({ token: await startSession(c.env.DB, user.id), confirmed: true });
 		}
+		case "google": {
+			// The web Worker checked Google's ID token (verified email, our client); only it holds WEB_KEY.
+			if (!validEmail(email)) return c.json(fail("email", "O Google não informou um e-mail válido."), 400);
+			const name = String(body.name ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
+			const id = await googleUser(c.env.DB, email, name);
+			await forget(c.env.DB, `e:${email}`, "fail");
+			return c.json({ token: await startSession(c.env.DB, id), confirmed: true });
+		}
 		default:
 			return c.json(fail("action", "Ação desconhecida."), 400);
 	}
@@ -144,7 +153,9 @@ accountRoutes.delete("/conta", async (c) => {
 	if (!user) return c.json(fail("no_account", "Esta credencial não é de uma conta."), 404);
 	const body = ((await c.req.json().catch(() => null)) ?? {}) as Body;
 	const stored = await userByEmail(c.env.DB, user.email);
-	if (!stored || !(await checkPassword(String(body.password ?? ""), stored.pass))) return c.json(fail("login", "Senha incorreta."), 401);
+	// Accounts that only use Google confirm by typing APAGAR instead of a password.
+	const confirmed = stored?.pass === NO_PASSWORD ? String(body.password ?? "").trim().toUpperCase() === "APAGAR" : stored && (await checkPassword(String(body.password ?? ""), stored.pass));
+	if (!stored || !confirmed) return c.json(fail("login", stored?.pass === NO_PASSWORD ? "Digite APAGAR para confirmar." : "Senha incorreta."), 401);
 	await purgeActor(c.env, user.email);
 	// The ledger stays, for the record of credits granted and spent.
 	await c.env.DB.batch([
