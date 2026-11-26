@@ -37,7 +37,7 @@ Order: equanime-api (`npx wrangler d1 migrations apply DB --remote`, then `npx w
 | Workflow | `equanime-analysis` (created by the API deploy) |
 | Workers | `equanime-api` on `api.equanime.rubrion.ai` (no Access; Bearer keys, or `WEB_KEY` + session from the web Worker), `equanime-web-client` on `equanime.rubrion.ai`, `equanime-agent` on `agent.equanime.rubrion.ai` (`/v1` with a key; the chat routes only by service binding) |
 | D1 (agent) | `equanime-agent-memory` (`d1b0234f-6f0e-4fd6-94ac-70a742744c07`, enam): the web chat's conversations |
-| Access app "Equânime" | `equanime.rubrion.ai`, Google login, policies Owner and USP. Replaced by Equânime's own accounts (2026-11-25): to be deleted once accounts are live in production |
+| Access app "Equânime" | deleted 2026-11-26: the site is public and people sign in with Equânime accounts. The IdP "Google — Equânime" stays unused; its OAuth client now backs "Entrar com Google" |
 | Access app "Equânime collector" | `equanime-collector.rubrion.ai`, service token `equanime-api` only (expires 2027-10-30) |
 | Tunnel | `equanime-collector-prod` (`10126536-499d-4e20-90e7-61912b3f6145`), remotely managed, ingress → `http://collector:8090`, proxied CNAME |
 
