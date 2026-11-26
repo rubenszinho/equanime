@@ -152,10 +152,39 @@ function Rule({ title, check }: { title: string; check: RuleCheck }) {
 			{check.evidence.length > 0 ? (
 				<details open={check.detected}>
 					<summary>{view.evidence} ({check.evidence.length})</summary>
-					<ul className="evidence">{check.evidence.map((item, index) => <EvidenceItem key={index} item={item} />)}</ul>
+					<EvidenceList items={check.evidence} />
 				</details>
 			) : null}
 		</div>
+	);
+}
+
+// A few items first: a reviewer with hundreds of shared publications would make the page endless.
+const FIRST = 3;
+const STEP = 20;
+
+function EvidenceList({ items }: { items: Evidence[] }) {
+	const [shown, setShown] = useState(FIRST);
+	const list = useRef<HTMLUListElement>(null);
+	const visible = items.slice(0, shown);
+	const rest = items.length - visible.length;
+	const less = () => {
+		setShown(FIRST);
+		// Back to the list's start, or the reader is left far below it.
+		const top = list.current?.closest(".rule")?.getBoundingClientRect().top;
+		if (top !== undefined && top < 0) list.current?.closest(".rule")?.scrollIntoView({ block: "start" });
+	};
+	return (
+		<>
+			<ul className="evidence" ref={list}>{visible.map((item, index) => <EvidenceItem key={index} item={item} />)}</ul>
+			{items.length > FIRST ? (
+				<p className="evidence-more">
+					{rest > 0 ? <button type="button" className="btn btn--quiet btn--small" onClick={() => setShown(shown + STEP)}>{view.more(Math.min(STEP, rest), rest)}</button> : null}
+					{shown > FIRST ? <button type="button" className="btn btn--quiet btn--small" onClick={less}>{view.less}</button> : null}
+					<span className="soft small">{view.showing(visible.length, items.length)}</span>
+				</p>
+			) : null}
+		</>
 	);
 }
 
