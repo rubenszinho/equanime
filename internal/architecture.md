@@ -100,7 +100,7 @@ No Cloudflare Access on the site: people register with email, password and a 6-d
 keeps the session token in the HttpOnly cookie `eq_u` and calls the API with `Bearer WEB_KEY` plus
 `X-Equanime-Session` (`equanime-web-client/src/lib/session.ts`); the API resolves the session to the
 email, which stays the analyses' `actor`. `src/middleware.ts` sends private pages (`/analises*`,
-`/conta`, `/admin`) to `/entrar`. Codes come from `no-reply@rubrion.ai` (Email Sending, `EMAIL`);
+`/conta`, `/admin`) to `/entrar`. Codes come from `no-reply@rubry.ai` (Email Sending, `EMAIL`);
 `OTP_LOG=1` logs them locally. Turnstile guards sign-up and "forgot" once `TURNSTILE_SITE_KEY` and
 `TURNSTILE_SECRET` are set on the web Worker.
 

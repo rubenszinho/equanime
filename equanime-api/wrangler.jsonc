@@ -60,7 +60,7 @@
 			"class_name": "AnalysisWorkflow"
 		}
 	],
-	// Sign-in codes from no-reply@rubrion.ai (Cloudflare Email Sending).
+	// Sign-in codes from no-reply@rubry.ai (Cloudflare Email Sending).
 	"send_email": [{ "name": "EMAIL" }],
 	"triggers": {
 		"crons": ["0 3 * * *"]
