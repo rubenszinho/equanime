@@ -24,8 +24,6 @@ Same owner and habits as rubry-monorepo:
 - LLM for ambiguous names: set `LLM_BASE_URL`/`LLM_MODEL` and the `LLM_API_KEY` secret (Brad workspace).
 - Register the tool and assistant in cortex's OpenWebUI with the advisor (`equanime-api/docs/cortex-validation.md`).
 - Issue #14's deadline (30/09/2026) has passed; report status on the issue.
-- Accounts replaced Access (Access app deleted 2026-11-26). "Entrar com Google" waits for the redirect URI
-  `https://equanime.rubrion.ai/api/conta/google/retorno` on the OAuth client "Cloudflare Access" (GCP `rubrion`),
-  then `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` on the web Worker. Credits are granted by hand (`/admin`);
-  selling them (Stripe, as rubry.ai) is a later step.
+- Accounts replaced Access (Access app deleted 2026-11-26); "Entrar com Google" live the same day. Credits are
+  granted by hand (`/admin`); selling them (Stripe, as rubry.ai) is a later step.
 - The videos carry a synthetic voice (`video/tts.py`); a human voice-over can replace it (`roteiro.pt-BR.md`). Then an English version.
