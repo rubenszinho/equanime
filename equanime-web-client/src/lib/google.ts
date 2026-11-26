@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 
-// "Entrar com Google": the OAuth client Access used (GCP project rubrion), now Equânime's own.
-// Any Google account may sign in; the email decides the plan as for any account (usp.br is free).
+// "Entrar com Google": OAuth client "Cloudflare Access" in GCP project rubrion (its name from when
+// Access used it). The email decides entry and plan as for any account (usp.br is free).
 const vars = env as unknown as { GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string };
 export const STATE_COOKIE = "eq_g";
 

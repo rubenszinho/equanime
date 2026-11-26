@@ -4,16 +4,17 @@ import { createApp } from "../src/app";
 import { freeDomain } from "../src/accounts";
 import { runAnalysis } from "../src/pipeline";
 
-const secured = { ...env, AUTH_MODE: "accounts", WEB_KEY: "web-key", OTP_LOG: "1", FREE_DOMAINS: "usp.br", ADMINS: "chefe@usp.br", RETENTION_DAYS: "90" } as CloudflareBindings;
+// Open to every email (the credits path); the USP-only gate has its own test below.
+const secured = { ...env, AUTH_MODE: "accounts", WEB_KEY: "web-key", OTP_LOG: "1", FREE_DOMAINS: "usp.br", ALLOWED_DOMAINS: "", ADMINS: "chefe@usp.br", RETENTION_DAYS: "90" } as CloudflareBindings;
 const app = createApp();
 
-async function call(path: string, init: { method?: string; body?: unknown; session?: string; key?: string } = {}) {
+async function call(path: string, init: { method?: string; body?: unknown; session?: string; key?: string; bindings?: CloudflareBindings } = {}) {
 	const ctx = createExecutionContext();
 	const headers: Record<string, string> = { "content-type": "application/json", authorization: `Bearer ${init.key ?? "web-key"}`, "x-equanime-net": "test-net" };
 	if (init.session) headers["x-equanime-session"] = init.session;
 	const response = await app.fetch(
 		new Request(`https://equanime.test${path}`, { method: init.method ?? (init.body ? "POST" : "GET"), headers, body: init.body ? JSON.stringify(init.body) : undefined }),
-		secured,
+		init.bindings ?? secured,
 		ctx,
 	);
 	await waitOnExecutionContext(ctx);
@@ -49,6 +50,23 @@ describe("accounts", () => {
 		expect(freeDomain(secured, "ana@notusp.br")).toBeNull();
 		expect(freeDomain(secured, "ana@usp.br.evil.com")).toBeNull();
 		expect(freeDomain(secured, "ana@gmail.com")).toBeNull();
+	});
+
+	it("lets only allowed domains (and admins) in while sign-up is limited", async () => {
+		const closed = { ...secured, ALLOWED_DOMAINS: "usp.br", ADMINS: "dono@rubrion.ai" } as CloudflareBindings;
+		const knows = await (await call("/conta/acesso", { bindings: closed })).json<{ allowed_domains: string[] }>();
+		expect(knows.allowed_domains).toEqual(["usp.br"]);
+		for (const action of ["register", "login", "forgot", "google"]) {
+			const reply = await call("/conta/acesso", { body: { action, name: "Fora", email: "fora@gmail.com", password: "senha-segura" }, bindings: closed });
+			expect(reply.status).toBe(403);
+			expect((await reply.json<{ error_type: string }>()).error_type).toBe("domain_not_allowed");
+		}
+		expect((await call("/conta/acesso", { body: { action: "google", email: "Iris@ICMC.usp.br", name: "Iris" }, bindings: closed })).status).toBe(200);
+		expect((await call("/conta/acesso", { body: { action: "google", email: "dono@rubrion.ai", name: "Dono" }, bindings: closed })).status).toBe(200);
+		// An account made while open stops working once the gate closes.
+		const open = await (await call("/conta/acesso", { body: { action: "google", email: "joao@gmail.com", name: "João" } })).json<{ token: string }>();
+		expect((await call("/conta", { session: open.token })).status).toBe(200);
+		expect((await call("/conta", { session: open.token, bindings: closed })).status).toBe(401);
 	});
 
 	it("signs up, confirms by code, signs in and out", async () => {

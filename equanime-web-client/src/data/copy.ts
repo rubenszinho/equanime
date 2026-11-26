@@ -134,7 +134,7 @@ export const form = {
 		reviewer: (index: number) => `Revise o nome e o Currículo Lattes do avaliador ${index}.`,
 		duplicate: "O mesmo currículo aparece mais de uma vez entre os avaliadores.",
 		self: "O candidato não pode ser avaliador da própria banca.",
-		session: "Sua sessão expirou. Recarregue a página para entrar de novo.",
+		session: "Sua sessão terminou. Recarregue a página para entrar de novo.",
 		credits: "Ver créditos na sua conta",
 		network: "A Equânime não respondeu. Verifique a conexão e tente de novo.",
 		rejected: "A análise não foi aceita.",
@@ -229,6 +229,8 @@ export const login = {
 	google: "Entrar com Google",
 	or: "ou com e-mail e senha",
 	googleFailed: "Não foi possível entrar com o Google. Tente de novo ou use e-mail e senha.",
+	// While sign-in is limited (ALLOWED_DOMAINS on equanime-api), shown on sign-in and sign-up in place of register.lead.
+	restricted: (domains: string[]) => `Por enquanto, a Equânime está aberta só para e-mails da USP (${domains.map((item) => `@${item}`).join(" ou ")} ou de uma unidade, como @icmc.usp.br).`,
 	name: "Nome",
 	email: "E-mail",
 	password: "Senha",

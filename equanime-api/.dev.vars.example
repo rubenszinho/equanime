@@ -1,4 +1,4 @@
-# Local dev: no Access, no Workflow (POST then run the analysis from tests), fixture curricula.
+# Local dev: no Workflow (POST then run the analysis from tests), fixture curricula.
 AUTH_MODE=dev
 EXECUTION_MODE=inline
 COLLECTOR_MODE=fixture

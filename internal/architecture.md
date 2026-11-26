@@ -108,6 +108,10 @@ and Google-only accounts confirm deletion by typing APAGAR. The button shows onl
 `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` set on the web Worker. Turnstile guards sign-up and "forgot" once `TURNSTILE_SITE_KEY` and
 `TURNSTILE_SECRET` are set on the web Worker.
 
+Who may enter: `ALLOWED_DOMAINS` on equanime-api (now `usp.br`, subdomains included; `ADMINS` always).
+Register, sign-in, reset and Google all check it, and sessions of other emails stop working; the sign-in
+page shows the limit in place of the plans text. Empty opens it to everyone, with the credits below.
+
 Who pays (`payerFor`): emails on `FREE_DOMAINS` (`usp.br`, any subdomain) use it without limit;
 integrations (`service:*`, `rubry:*`) too. Any other account spends credits, one per reviewer,
 charged atomically when the analysis is created (402 when short) and refunded once if the run ends

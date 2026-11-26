@@ -109,7 +109,7 @@ describe("analysis form", () => {
 
 	it("explains an expired session instead of failing silently", async () => {
 		const user = userEvent.setup();
-		vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200, headers: new Headers({ "content-type": "text/html" }), json: async () => { throw new Error("html"); } }));
+		vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json({ status: "error", error_type: "unauthorized", message: "Entre na sua conta." }, 401)));
 		render(<AnalysisForm />);
 		await user.type(screen.getByLabelText("Nome do candidato"), "João da Silva");
 		await user.type(screen.getByLabelText("Lattes do candidato"), "http://lattes.cnpq.br/1111111111111111");
@@ -117,7 +117,7 @@ describe("analysis form", () => {
 		await user.type(screen.getByLabelText("Lattes do avaliador 1"), "http://lattes.cnpq.br/3333333333333333");
 		await user.click(screen.getAllByRole("button", { name: /Remover/ })[1]!);
 		await user.click(screen.getByRole("button", { name: "Analisar banca" }));
-		expect((await screen.findByRole("alert")).textContent).toContain("sessão expirou");
+		expect((await screen.findByRole("alert")).textContent).toContain("sessão terminou");
 		expect((screen.getByRole("button", { name: "Analisar banca" }) as HTMLButtonElement).disabled).toBe(false);
 	});
 });

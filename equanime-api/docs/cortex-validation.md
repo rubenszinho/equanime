@@ -12,7 +12,7 @@ conta Cloudflare do ICMC. Combinar com o orientador.
 ## Pré-requisitos
 
 1. Recursos Cloudflare criados (D1 `equanime`, R2 `equanime-evidence`, Workflow), migrações aplicadas. Feito em 30/10/2026.
-2. Access em `equanime.rubrion.ai` (código por e-mail; `@usp.br`, `@icmc.usp.br` e o responsável) e seu AUD em `POLICY_AUD`. Feito.
+2. Contas da Equânime em `equanime.rubrion.ai` (e-mail com código ou Google), por enquanto só para `@usp.br` e unidades (`ALLOWED_DOMAINS`). Feito em 26/11/2026.
 3. Segredos do Worker: `OPENWEBUI_KEY`, `COLLECTOR_TOKEN`, `COLLECTOR_ACCESS_SECRET`, `LLM_API_KEY`. Também no Infisical (`/equanime`).
 4. Coletor no ar (`~/rubrion/infra/instances/oracle-rubrion-1/equanime-collector`).
 5. **Autorização do CNPq**: a USP pede ao CNPq acesso do IP `144.22.250.174` ao extrator de currículos (WSCurriculo). Enquanto não houver, `COLLECTOR_MODE=upload` e os usuários enviam o XML pela aplicação web.

@@ -21,13 +21,13 @@ declare global {
 }
 
 /** Sign in, create an account, confirm the email by code, or reset the password. */
-export default function Login({ back, confirm, siteKey, google = false, failed = false }: { back: string; confirm: boolean; siteKey: string; google?: boolean; failed?: boolean }) {
+export default function Login({ back, confirm, siteKey, google = false, failure = "", only = [] }: { back: string; confirm: boolean; siteKey: string; google?: boolean; failure?: string; only?: string[] }) {
 	const [mode, setMode] = useState<Mode>(confirm ? "confirm" : "signIn");
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [code, setCode] = useState("");
-	const [error, setError] = useState(failed ? copy.googleFailed : "");
+	const [error, setError] = useState(failure);
 	const [note, setNote] = useState("");
 	const [busy, setBusy] = useState(false);
 	const [hydrated, setHydrated] = useState(false);
@@ -119,7 +119,7 @@ export default function Login({ back, confirm, siteKey, google = false, failed =
 	return (
 		<form className="sheet box login" data-hydrated={hydrated ? "true" : "false"} onSubmit={submit}>
 			<h1>{titles[mode]}</h1>
-			{mode === "register" ? <p className="soft">{copy.register.lead}</p> : null}
+			{only.length > 0 && (mode === "signIn" || mode === "register") ? <p className="login__only">{copy.restricted(only)}</p> : mode === "register" ? <p className="soft">{copy.register.lead}</p> : null}
 			{mode === "confirm" ? <p className="soft">{copy.confirm.lead(email)}</p> : null}
 			{mode === "forgot" ? <p className="soft">{copy.forgot.lead}</p> : null}
 			{google && (mode === "signIn" || mode === "register") ? (

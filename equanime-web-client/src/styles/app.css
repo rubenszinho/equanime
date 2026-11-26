@@ -86,6 +86,7 @@
 	.login .btn--primary { justify-self: start; }
 	.login .google { justify-self: stretch; }
 	.login__or { text-align: center; max-width: none; }
+	.login__only { padding: 0.7rem 0.85rem; border-radius: 6px; border: 1px solid var(--hair); background: var(--paper); font-size: 0.95rem; }
 	.login__links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; color: var(--ink-soft); }
 	.link { padding: 0; border: 0; background: none; color: var(--stamp); font: inherit; text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px; cursor: pointer; min-height: 0; overflow-wrap: anywhere; text-align: left; }
 	.credits { font: 600 1.6rem/1.2 var(--font-display); }

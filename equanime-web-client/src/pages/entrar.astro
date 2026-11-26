@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import Layout from "../layouts/Layout.astro";
 import Login from "../components/Login";
 import { login } from "../data/copy";
-import { currentAccount } from "../lib/session";
+import { callApi, currentAccount } from "../lib/session";
 import { googleReady } from "../lib/google";
 import "../styles/app.css";
 
@@ -16,11 +16,15 @@ const account = await currentAccount(Astro.request);
 if (account?.confirmed) return Astro.redirect(back);
 const siteKey = String((env as unknown as { TURNSTILE_SITE_KEY?: string }).TURNSTILE_SITE_KEY ?? "");
 const google = googleReady();
-const failed = Astro.url.searchParams.get("erro") === "google";
+// The domains sign-in is limited to for now, from the API (empty: open to everyone).
+const rules = await callApi(Astro.request, "/conta/acesso").then((reply) => (reply.ok ? (reply.json() as Promise<{ allowed_domains?: string[] }>) : {})).catch(() => ({}));
+const only = (rules as { allowed_domains?: string[] }).allowed_domains ?? [];
+const erro = Astro.url.searchParams.get("erro");
+const failure = erro === "dominio" ? login.restricted(only.length ? only : ["usp.br"]) : erro === "google" ? login.googleFailed : "";
 ---
 
 <Layout title={`${login.pageTitle} | Equânime`} assistant={false}>
 	<section class="wrap page page--narrow">
-		<Login client:load back={back} confirm={Boolean(account) || Astro.url.searchParams.has("confirmar")} siteKey={siteKey} google={google} failed={failed} />
+		<Login client:load back={back} confirm={Boolean(account) || Astro.url.searchParams.has("confirmar")} siteKey={siteKey} google={google} failure={failure} only={only} />
 	</section>
 </Layout>

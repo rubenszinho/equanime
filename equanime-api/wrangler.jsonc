@@ -17,7 +17,7 @@
 	// The PDF embeds Public Sans so Portuguese accents survive.
 	"rules": [{ "type": "Data", "globs": ["**/*.ttf"], "fallthrough": true }],
 	"vars": {
-		// "dev" skips sign-in locally; anything else requires an account session, an integration key or a service token.
+		// "dev" skips sign-in locally; anything else requires an account session or an integration key.
 		"AUTH_MODE": "accounts",
 		"EXECUTION_MODE": "workflow",
 		// http: equanime-collector on cortex.icmc.usp.br (CNPq's extractor, then CNPq's public search);
@@ -32,12 +32,14 @@
 		"MAX_REVIEWERS": "12",
 		"MAX_ANALYSES_PER_HOUR": "30",
 		"RETENTION_DAYS": "90",
+		// Who may register and sign in, by email domain (subdomains included); ADMINS always may.
+		// Empty opens Equânime to every email (others then spend credits). Until release: USP only.
+		"ALLOWED_DOMAINS": "usp.br",
 		// Institutions whose people use Equânime for free and without limit: the domain or any subdomain
 		// (usp.br covers icmc.usp.br). Everyone else spends credits, one per reviewer.
 		"FREE_DOMAINS": "usp.br",
 		// "1" logs sign-in codes instead of emailing them (local dev).
-		"OTP_LOG": "",
-		"ACCESS_CLIENT_ID": ""
+		"OTP_LOG": ""
 	},
 	"d1_databases": [
 		{

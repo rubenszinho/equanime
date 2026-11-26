@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "hono";
-import { sessionUser, touch, type User } from "./accounts";
+import { mayEnter, sessionUser, touch, type User } from "./accounts";
 import { logInfo } from "./log";
 import { sha256 } from "./normalize";
 import { envString } from "./settings";
@@ -38,12 +38,7 @@ export const authenticate: MiddlewareHandler<{ Bindings: CloudflareBindings; Var
 	}
 	const actor = fromWeb
 		? await fromSession(c.env, c.req.header("x-equanime-session"))
-		: await identify(c.env, {
-			bearer,
-			clientId: c.req.header("cf-access-client-id") ?? "",
-			clientSecret: c.req.header("cf-access-client-secret") ?? "",
-			person: c.req.header("x-equanime-person"),
-		});
+		: await identify(c.env, { bearer, person: c.req.header("x-equanime-person") });
 	if (!actor) return c.json({ status: "error", error_type: "unauthorized", message: "Entre na sua conta do Equânime, ou use a chave da integração." }, 401);
 	if (actor.user && !actor.user.email_ok && !UNCONFIRMED.has(c.req.path)) {
 		return c.json({ status: "error", error_type: "email_unconfirmed", message: "Confirme seu e-mail com o código que enviamos antes de continuar." }, 403);
@@ -59,7 +54,8 @@ export const authenticate: MiddlewareHandler<{ Bindings: CloudflareBindings; Var
 async function fromSession(env: CloudflareBindings, token: string | undefined): Promise<Actor | null> {
 	if (envString(env, "AUTH_MODE") === "dev" && !token) return { id: "development", kind: "development" };
 	const user = await sessionUser(env.DB, token);
-	if (!user) return null;
+	// While sign-in is limited to some institutions, sessions from other emails stop working too.
+	if (!user || !mayEnter(env, user.email)) return null;
 	await touch(env.DB, user.id);
 	return { id: user.email, kind: "user", user };
 }
@@ -67,7 +63,7 @@ async function fromSession(env: CloudflareBindings, token: string | undefined): 
 // Emails, "rubry:<id>", "openwebui:<email>" or "service:<name>".
 const PERSON = /^[a-z0-9][a-z0-9@._:+-]{2,199}$/;
 
-async function identify(env: CloudflareBindings, request: { bearer?: string; clientId: string; clientSecret: string; person?: string }): Promise<Actor | null> {
+async function identify(env: CloudflareBindings, request: { bearer?: string; person?: string }): Promise<Actor | null> {
 	if (envString(env, "AUTH_MODE") === "dev") return { id: "development", kind: "development" };
 	// The Equânime agent acts for the person it is talking to; the header counts only with its key.
 	if (request.bearer && env.AGENT_KEY && safeEqual(request.bearer, env.AGENT_KEY)) {
@@ -77,11 +73,6 @@ async function identify(env: CloudflareBindings, request: { bearer?: string; cli
 	}
 	// OpenWebUI tool servers send a Bearer key. All its users share this actor.
 	if (request.bearer && env.OPENWEBUI_KEY && safeEqual(request.bearer, env.OPENWEBUI_KEY)) return { id: "service:openwebui", kind: "service" };
-	// Cloudflare Access service tokens (other Rubrion services).
-	const configuredId = envString(env, "ACCESS_CLIENT_ID");
-	if (configuredId && env.ACCESS_CLIENT_SECRET && safeEqual(request.clientId, configuredId) && safeEqual(request.clientSecret, env.ACCESS_CLIENT_SECRET)) {
-		return { id: `service:${request.clientId}`, kind: "service" };
-	}
 	return null;
 }
 

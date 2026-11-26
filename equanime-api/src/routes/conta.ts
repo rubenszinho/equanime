@@ -11,7 +11,7 @@
 import { Hono } from "hono";
 import type { Actor } from "../auth";
 import {
-	balance, checkPassword, cooling, createUser, endSession, forget, freeDomain, googleUser, grant, hashPassword, history, isAdmin, NO_PASSWORD,
+	allowedDomains, balance, checkPassword, cooling, createUser, endSession, forget, freeDomain, googleUser, grant, hashPassword, history, isAdmin, mayEnter, NO_PASSWORD,
 	MIN_PASSWORD, newCode, normalEmail, startSession, take, useCode, userByEmail, validEmail, type User,
 } from "../accounts";
 import { emailCode } from "../mail";
@@ -58,12 +58,21 @@ async function sendCode(env: CloudflareBindings, user: { id: string; email: stri
 	return null;
 }
 
+// What the sign-in page needs to know: the domains it is limited to for now (empty: everyone).
+accountRoutes.get("/conta/acesso", (c) => c.json({ allowed_domains: allowedDomains(c.env) }));
+
+const closed = (env: CloudflareBindings) => {
+	const list = allowedDomains(env).map((item) => `@${item}`).join(", ");
+	return fail("domain_not_allowed", `Por enquanto, a Equânime está aberta só para e-mails da USP (${list} ou de uma unidade, como @icmc.usp.br).`);
+};
+
 accountRoutes.post("/conta/acesso", async (c) => {
 	const body = ((await c.req.json().catch(() => null)) ?? {}) as Body;
 	// The web app passes a hash of the visitor's network; limits count per network, never per IP.
 	const net = `n:${(c.req.header("x-equanime-net") ?? "local").slice(0, 64)}`;
 	const email = normalEmail(body.email);
 	const password = String(body.password ?? "");
+	if (body.action && email && !mayEnter(c.env, email)) return c.json(closed(c.env), 403);
 	switch (body.action) {
 		case "register": {
 			const name = String(body.name ?? "").trim().replace(/\s+/g, " ").slice(0, 120);

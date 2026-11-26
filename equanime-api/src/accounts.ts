@@ -169,12 +169,27 @@ export async function forget(db: D1Database, who: string, kind: string): Promise
 
 // ---- entitlements
 
-/** The free institution an email belongs to (`usp.br` for `x@icmc.usp.br`), or null. */
-export function freeDomain(env: CloudflareBindings, email: string): string | null {
+const domains = (value: string) => value.split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
+
+/** The entry of `list` an email's domain is, or is a subdomain of (`usp.br` for `x@icmc.usp.br`). */
+function matching(list: string[], email: string): string | null {
 	const domain = email.slice(email.lastIndexOf("@") + 1).toLowerCase();
 	if (!domain || !email.includes("@")) return null;
-	const allowed = envString(env, "FREE_DOMAINS").split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
-	return allowed.find((item) => domain === item || domain.endsWith(`.${item}`)) ?? null;
+	return list.find((item) => domain === item || domain.endsWith(`.${item}`)) ?? null;
+}
+
+/** The free institution an email belongs to, or null. */
+export function freeDomain(env: CloudflareBindings, email: string): string | null {
+	return matching(domains(envString(env, "FREE_DOMAINS")), email);
+}
+
+/** The domains sign-in is limited to for now (ALLOWED_DOMAINS); empty when open to everyone. */
+export const allowedDomains = (env: CloudflareBindings) => domains(envString(env, "ALLOWED_DOMAINS"));
+
+/** Whether this email may register and sign in now. Admins always may. */
+export function mayEnter(env: CloudflareBindings, email: string): boolean {
+	const allowed = allowedDomains(env);
+	return allowed.length === 0 || Boolean(matching(allowed, email)) || isAdmin(env, email);
 }
 
 export function isAdmin(env: CloudflareBindings, email: string): boolean {

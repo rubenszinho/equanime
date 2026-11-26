@@ -135,7 +135,7 @@ describe("analysis API", () => {
 
 	it("keeps each caller's analyses to themselves", async () => {
 		const app = createApp();
-		const secured = { ...env, AUTH_MODE: "access", OPENWEBUI_KEY: "integration-key", POLICY_AUD: "" } as CloudflareBindings;
+		const secured = { ...env, AUTH_MODE: "accounts", OPENWEBUI_KEY: "integration-key" } as CloudflareBindings;
 		const call = async (path: string, init: RequestInit = {}) => {
 			const ctx = createExecutionContext();
 			const response = await app.fetch(new Request(`https://equanime.test${path}`, init), secured, ctx);
@@ -157,7 +157,7 @@ describe("analysis API", () => {
 
 	it("lets the agent act for the person it talks to, and lists their analyses", async () => {
 		const app = createApp();
-		const secured = { ...env, AUTH_MODE: "access", AGENT_KEY: "agent-key", POLICY_AUD: "" } as CloudflareBindings;
+		const secured = { ...env, AUTH_MODE: "accounts", AGENT_KEY: "agent-key" } as CloudflareBindings;
 		const call = async (path: string, init: RequestInit = {}) => {
 			const ctx = createExecutionContext();
 			const response = await app.fetch(new Request(`https://equanime.test${path}`, init), secured, ctx);
@@ -184,7 +184,7 @@ describe("analysis API", () => {
 
 	it("keeps an attached document for the person who sent it only", async () => {
 		const app = createApp();
-		const secured = { ...env, AUTH_MODE: "access", AGENT_KEY: "agent-key", POLICY_AUD: "" } as CloudflareBindings;
+		const secured = { ...env, AUTH_MODE: "accounts", AGENT_KEY: "agent-key" } as CloudflareBindings;
 		const call = async (path: string, person: string, body?: FormData) => {
 			const ctx = createExecutionContext();
 			const response = await app.fetch(
