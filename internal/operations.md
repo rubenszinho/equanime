@@ -19,6 +19,7 @@ cd equanime-collector && EQUANIME_COLLECTOR_AUTH=dev .venv/bin/uvicorn equanime_
 - `astro dev` backgrounds itself when it detects an agent; Playwright uses `--ignore-lock` to stay in the foreground.
 - To exercise the HTTP collector locally: API `.dev.vars` `COLLECTOR_MODE=http`, `COLLECTOR_TOKEN=<t>`, and the collector with `EQUANIME_COLLECTOR_TOKEN=<t>`.
 - Browser checks: Playwright at `~/rubrion/cerne/node_modules/playwright`, 390px and dark mode.
+- UI kit: shadcn/ui (Radix) in `equanime-web-client/src/components/ui`, on the site's tokens (`src/styles/ui.css`), plus `motion` for transitions. Add one with `npx shadcn@latest add <name>`, then check its imports use `@/lib/utils` (the CLI once wired an npm package called `cn`) and drop `next-themes` (the theme is `<html data-theme>`). Layer order is in `global.css`: shadcn's reset, the site, overrides, utilities.
 
 ## Checks
 

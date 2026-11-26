@@ -1,8 +1,14 @@
 /* Equânime: cool office paper, fountain-pen ink, a stamp-indigo accent.
    Verdict colours are their own tokens and always come with words and a mark. */
 
-/* Layer order: the site's styles, then the assistant's overrides, then Tailwind's utilities (only the kit's). */
-@layer theme, base, site, components, utilities;
+/* Layer order: shadcn's reset (ui.css), the site's styles, overrides for components, then Tailwind's utilities. */
+@layer theme, base, ui-base, site, components, utilities;
+
+/* Moving between pages cross-fades; the app bar stays put. */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.2s; }
+:root { interpolate-size: allow-keywords; }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 
 @layer site {
 	:root {
@@ -80,29 +86,38 @@
 	.soft { color: var(--ink-soft); }
 	.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-	/* Header and footer */
-	.top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 1.25rem; }
-	.brand { display: inline-flex; align-items: center; gap: 0.6rem; color: var(--ink); text-decoration: none; font: 600 1.35rem/1 var(--font-display); }
+	/* App bar: brand and sections on the left; the action, the account and, alone in the corner, the theme. */
+	.appbar { position: sticky; top: 0; z-index: 40; background: color-mix(in oklab, var(--paper) 82%, transparent); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid transparent; transition: border-color 0.2s, box-shadow 0.2s; view-transition-name: appbar; }
+	.appbar[data-scrolled] { border-bottom-color: var(--hair); box-shadow: 0 6px 18px -16px rgba(20, 35, 58, 0.45); }
+	.appbar__inner { display: flex; align-items: center; gap: 1.5rem; min-height: 64px; }
+	.brand { display: inline-flex; align-items: center; gap: 0.6rem; color: var(--ink); text-decoration: none; font: 600 1.35rem/1 var(--font-display); white-space: nowrap; }
 	.brand > svg { width: 30px; height: 30px; color: var(--stamp); }
 	/* The â's circumflex is the logo's beam, in stamp ink with its pivot. */
 	.wordmark__a { position: relative; display: inline-block; }
 	.wordmark__a svg { position: absolute; left: 50%; bottom: 0.62em; width: 0.62em; height: 0.31em; transform: translateX(-50%); color: var(--stamp); overflow: visible; }
-	.top nav { display: flex; align-items: center; gap: 0.5rem; }
-	.top nav a:not(.btn) { color: var(--ink-soft); text-decoration: none; padding: 0.5rem 0.6rem; font-size: 0.95rem; }
-	.top nav a:not(.btn):hover { color: var(--ink); }
-	.top nav a[hidden] { display: none; }
-	.theme { display: inline-grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 999px; background: none; color: var(--ink-soft); cursor: pointer; }
+	.appbar__nav { display: flex; align-items: center; gap: 0.25rem; }
+	.appbar__link { position: relative; color: var(--ink-soft); text-decoration: none; padding: 0.45rem 0.7rem; border-radius: 6px; font-size: 0.95rem; font-weight: 500; white-space: nowrap; transition: color 0.15s, background-color 0.15s; }
+	.appbar__link:hover { color: var(--ink); background: var(--rule); }
+	.appbar__link[aria-current="page"] { color: var(--ink); }
+	.appbar__link[aria-current="page"]::after { content: ""; position: absolute; left: 0.7rem; right: 0.7rem; bottom: -0.65rem; height: 2px; border-radius: 2px; background: var(--stamp); }
+	.appbar__actions { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
+	.appbar__start svg { margin-left: -0.15rem; }
+	.appbar__avatar { display: inline-flex; border: 0; padding: 0; border-radius: 999px; background: none; cursor: pointer; transition: box-shadow 0.15s; }
+	.appbar__avatar:hover, .appbar__avatar[data-state="open"] { box-shadow: 0 0 0 3px color-mix(in oklab, var(--stamp) 22%, transparent); }
+	.appbar__divider { width: 1px; height: 24px; background: var(--hair); }
+	.theme { display: inline-grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 999px; background: none; color: var(--ink-soft); cursor: pointer; transition: color 0.15s, background-color 0.15s; }
 	.theme:hover { color: var(--ink); background: var(--rule); }
-	.theme svg { width: 20px; height: 20px; }
+	.theme svg { width: 19px; height: 19px; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+	.theme:active svg { transform: rotate(-30deg) scale(0.9); }
 	.theme__sun, :root[data-theme="dark"] .theme__moon { display: none; }
 	:root[data-theme="dark"] .theme__sun { display: block; }
-	@media (max-width: 560px) { .top nav .how { display: none; } }
-	/* Signed in, the header also holds the account's name: keep the wordmark and buttons on one line. */
-	.brand, .top nav .btn, .top nav .acct { white-space: nowrap; }
+	@media (max-width: 760px) { .appbar__nav { display: none; } }
 	@media (max-width: 420px) {
-		.top { gap: 0.5rem; }
-		.top nav { gap: 0.15rem; }
-		.top nav a.acct { padding-inline: 0.4rem; max-width: 6.5rem; overflow: hidden; text-overflow: ellipsis; }
+		.appbar__inner { gap: 0.5rem; }
+		.appbar__actions { gap: 0.4rem; }
+		.appbar__start span { display: none; }
+		.appbar__start { width: 38px; padding: 0; }
+		.appbar__start svg { margin: 0; width: 20px; height: 20px; }
 	}
 
 	.foot { border-top: 1px solid var(--hair); margin-top: 5rem; padding-block: 2rem 3rem; color: var(--ink-faint); font-size: 0.9rem; display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; justify-content: space-between; }
@@ -139,6 +154,10 @@
 	input:focus-visible, select:focus-visible { outline-offset: 0; border-color: var(--focus); }
 	input[aria-invalid="true"] { border-color: var(--flag); }
 	.error { color: var(--flag); font-size: 0.9rem; }
+
+	/* A verdict lands like a stamp on paper: the site's one recurring moment of motion. */
+	@keyframes eq-stamp { from { opacity: 0; transform: scale(1.35) rotate(-6deg); } 70% { opacity: 1; transform: scale(0.97) rotate(-1deg); } }
+	@keyframes eq-rise { from { opacity: 0; transform: translateY(4px); } }
 
 	@media (prefers-reduced-motion: reduce) {
 		*, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }

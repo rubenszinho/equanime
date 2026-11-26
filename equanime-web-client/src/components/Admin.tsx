@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { admin as copy } from "../data/copy";
 import { api } from "../lib/api";
+import { toast } from "sonner";
 
 type Row = { email: string; name: string; confirmed: boolean; created: string; last_seen: string | null; credits: number; analyses: number; institution: string | null };
 
@@ -9,7 +10,6 @@ export default function Admin() {
 	const [email, setEmail] = useState("");
 	const [amount, setAmount] = useState("12");
 	const [note, setNote] = useState("");
-	const [message, setMessage] = useState("");
 	const [error, setError] = useState("");
 
 	const load = () => api<{ users: Row[] }>("/admin/usuarios").then((reply) => (reply.ok ? setRows(reply.body.users) : setError(reply.message)));
@@ -17,7 +17,6 @@ export default function Admin() {
 
 	async function submit(event: { preventDefault(): void }) {
 		event.preventDefault();
-		setMessage("");
 		setError("");
 		const reply = await api<{ email: string; credits: number }>("/admin/creditos", {
 			method: "POST",
@@ -25,7 +24,7 @@ export default function Admin() {
 			body: JSON.stringify({ email, credits: Number(amount), note }),
 		});
 		if (!reply.ok) return setError(reply.message);
-		setMessage(copy.done(reply.body.email, reply.body.credits));
+		toast.success(copy.done(reply.body.email, reply.body.credits));
 		void load();
 	}
 
@@ -38,7 +37,6 @@ export default function Admin() {
 				<label className="field"><span>{copy.amount}</span><input type="number" step={1} required value={amount} onChange={(event) => setAmount(event.target.value)} /></label>
 				<label className="field"><span>{copy.note}</span><input value={note} maxLength={200} onChange={(event) => setNote(event.target.value)} /></label>
 				{error ? <p className="error" role="alert">{error}</p> : null}
-				{message ? <p role="status">{message}</p> : null}
 				<button type="submit" className="btn btn--primary btn--small">{copy.submit}</button>
 			</form>
 			<div className="admin__table">

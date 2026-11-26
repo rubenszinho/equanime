@@ -32,9 +32,17 @@
 
 	.progress { display: grid; gap: 0.75rem; }
 	.progress ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
-	.progress li { padding-top: 0.6rem; border-top: 3px solid var(--hair); color: var(--ink-faint); font-size: 0.85rem; font-weight: 600; }
-	.progress li.past { border-color: var(--ink); color: var(--ink); }
-	.progress li.now { border-color: var(--stamp); color: var(--stamp); }
+	/* Each step is a track that fills as the analysis moves; the current one pulses while it works. */
+	.progress li { position: relative; padding-top: 0.7rem; color: var(--ink-faint); font-size: 0.85rem; font-weight: 600; transition: color 0.3s; }
+	.progress li::before, .progress li::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 3px; }
+	.progress li::before { background: var(--hair); }
+	.progress li::after { background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+	.progress li.past { color: var(--ink); }
+	.progress li.past::after { transform: scaleX(1); }
+	.progress li.now { color: var(--stamp); }
+	.progress li.now::after { background: var(--stamp); transform: scaleX(1); animation: eq-working 1.6s ease-in-out infinite; }
+	@keyframes eq-working { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+	.progress__message { min-height: 1.6em; }
 	@media (max-width: 560px) { .progress ol { grid-template-columns: repeat(2, 1fr); row-gap: 0.75rem; } }
 
 	.tally { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 2rem; padding-block: 1.25rem; border-block: 1px solid var(--hair); }
@@ -49,6 +57,12 @@
 	.group { display: grid; gap: 1rem; }
 	.reviewer { padding: clamp(1rem, 3vw, 1.5rem); display: grid; gap: 0.25rem; }
 	.reviewer > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding-bottom: 0.75rem; }
+	/* The results arrive: each reviewer's verdict is stamped in turn. */
+	.reviewer > header .verdict { animation: eq-stamp 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; animation-delay: calc(0.15s + var(--i, 0) * 0.12s); }
+	/* Evidence opens and closes smoothly where the browser can animate to auto. */
+	.rule details::details-content { block-size: 0; overflow: hidden; transition: block-size 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), content-visibility 0.3s allow-discrete; }
+	.rule details[open]::details-content { block-size: auto; }
+	.evidence > li { animation: eq-rise 0.25s ease-out both; }
 	@media (max-width: 520px) { .reviewer > header { flex-direction: column; } }
 	.rule { padding: 0.85rem 0 0.85rem 0.9rem; border-left: 3px solid var(--hair); margin-top: 0.5rem; display: grid; gap: 0.25rem; }
 	.rule--potential_conflict { border-left-color: var(--flag); }
@@ -84,15 +98,48 @@
 	.box h1 { font-size: clamp(1.7rem, 4vw, 2.2rem); }
 	.box h2 { font-size: 1.3rem; }
 	.login .btn--primary { justify-self: start; }
+	.login { gap: 1.1rem; }
+	.login__tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 10px; background: var(--rule); }
+	.login__tab { position: relative; border: 0; background: none; padding: 0.5rem; border-radius: 7px; font: 600 0.92rem/1.2 var(--font-body); color: var(--ink-soft); cursor: pointer; }
+	.login__tab[aria-selected="true"] { color: var(--ink); }
+	.login__pill { position: absolute; inset: 0; border-radius: 7px; background: var(--sheet); box-shadow: 0 1px 2px rgba(20, 35, 58, 0.12); }
+	.login__tab-label { position: relative; }
+	.login__step { display: grid; gap: 1rem; padding: 2px; }
+	.login__code { font: 600 1.4rem/1 var(--font-body); letter-spacing: 0.4em; text-align: center; }
+	.login .login__submit { justify-self: stretch; }
 	.login .google { justify-self: stretch; }
 	.login__or { text-align: center; max-width: none; }
 	.login__only { padding: 0.7rem 0.85rem; border-radius: 6px; border: 1px solid var(--hair); background: var(--paper); font-size: 0.95rem; }
 	.login__links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; color: var(--ink-soft); }
+	.login__links:empty { display: none; }
 	.link { padding: 0; border: 0; background: none; color: var(--stamp); font: inherit; text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px; cursor: pointer; min-height: 0; overflow-wrap: anywhere; text-align: left; }
 	.credits { font: 600 1.6rem/1.2 var(--font-display); }
-	.account__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-	.account__delete { display: grid; gap: 0.75rem; }
-	.account__delete .btn { justify-self: start; }
+	.account { display: grid; gap: 1.25rem; }
+	.account__head { display: flex; align-items: center; gap: 1.1rem; margin-bottom: 0.75rem; }
+	.account__who { display: grid; gap: 0.2rem; min-width: 0; }
+	.account__who h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); overflow-wrap: anywhere; }
+	.account__who p { overflow-wrap: anywhere; }
+	.account__tags { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.75rem; margin-top: 0.3rem; }
+	.tag { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.15rem 0.6rem 0.15rem 0.45rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
+	.tag svg { width: 15px; height: 15px; }
+	.tag--ok { color: var(--ok); background: var(--ok-bg); }
+	.account__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; align-items: start; }
+	.account__grid .box { margin: 0; align-content: start; }
+	.account h2 { display: flex; align-items: center; gap: 0.5rem; }
+	.account h2 svg { width: 20px; height: 20px; color: var(--stamp); }
+	.account__next { display: flex; align-items: flex-start; gap: 0.45rem; }
+	.account__next svg { width: 17px; height: 17px; margin-top: 0.2rem; flex: none; }
+	.account__next--soon { padding: 0.5rem 0.65rem; border-radius: 6px; background: var(--maybe-bg); color: var(--ink); }
+	.account__next--soon svg { color: var(--maybe); }
+	.account__end { display: flex; flex-wrap: wrap; gap: 0.6rem; padding-top: 0.5rem; }
+	.account__end .btn--danger { margin-left: auto; }
+	.account__dialog { background: var(--sheet); border-color: var(--hair); }
+	.btn svg { flex: none; }
+	@media (max-width: 640px) {
+		.account__grid { grid-template-columns: 1fr; }
+		.account__head { align-items: flex-start; }
+		.account__end .btn--danger { margin-left: 0; }
+	}
 	.btn--danger { background: transparent; color: var(--flag); border-color: var(--flag); }
 	.btn--danger:hover:not(:disabled) { background: var(--flag-bg); }
 	.ledger { list-style: none; margin: 0; padding: 0; display: grid; }
@@ -103,12 +150,20 @@
 
 	/* My analyses */
 	.mine { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; gap: 0.75rem; }
-	.mine__item { padding: 1rem 1.15rem; display: grid; gap: 0.5rem; }
+	.mine__item { position: relative; padding: 1rem 3rem 1rem 1.15rem; display: grid; gap: 0.5rem; transition: border-color 0.15s, transform 0.15s; }
+	.mine__item:has(.mine__link:hover) { border-color: color-mix(in oklab, var(--stamp) 45%, var(--hair)); }
 	.mine__link { display: grid; gap: 0.15rem; color: var(--ink); text-decoration: none; }
-	.mine__link:hover .mine__who { text-decoration: underline; }
+	/* The whole card opens the analysis. */
+	.mine__link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+	.mine__go { position: absolute; right: 1rem; top: 50%; width: 20px; height: 20px; margin-top: -10px; color: var(--ink-faint); transition: transform 0.15s, color 0.15s; }
+	.mine__item:has(.mine__link:hover) .mine__go { color: var(--stamp); transform: translateX(3px); }
 	.mine__who { font-weight: 650; overflow-wrap: anywhere; }
 	.mine__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 1rem; }
-	.mine__status { font-weight: 600; }
+	.mine__status { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; }
+	.mine__status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--stamp); }
+	.mine__status--completed::before { background: var(--ok); }
+	.mine__status--completed_with_warnings::before { background: var(--maybe); }
+	.mine__status--failed::before { background: var(--flag); }
 	.badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 4px; font-weight: 650; }
 	.badge--soon { color: var(--maybe); background: var(--maybe-bg); border: 1px solid currentColor; }
 

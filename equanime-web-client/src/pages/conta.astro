@@ -11,7 +11,7 @@ const data = Astro.locals.account!;
 ---
 
 <Layout title={`${account.pageTitle} | Equânime`}>
-	<section class="wrap page page--narrow">
+	<section class="wrap page">
 		<Account client:load data={data} />
 	</section>
 </Layout>

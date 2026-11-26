@@ -1,55 +1,6 @@
-/* The assistant (Beholder). Tailwind without its preflight: the kit's roots (.ak) reset their own
-   elements and the rest of the site keeps global.css. Classes come only from the kit. */
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities) source(none);
+/* The assistant (Beholder): Tailwind and the shadcn tokens come from ui.css (Layout); the kit's roots (.ak)
+   reset their own elements. */
 @import "@rubrion/beholder-react/styles.css";
-@source "../../node_modules/@rubrion/beholder-react/dist";
-
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
-/* The kit draws with shadcn/ui's tokens; here they are Equânime's. */
-:root {
-	--background: var(--paper);
-	--foreground: var(--ink);
-	--card: var(--sheet);
-	--card-foreground: var(--ink);
-	--popover: var(--sheet);
-	--popover-foreground: var(--ink);
-	--primary: var(--stamp);
-	--primary-foreground: var(--stamp-ink);
-	--secondary: var(--rule);
-	--secondary-foreground: var(--ink);
-	--muted: var(--rule);
-	--muted-foreground: var(--ink-soft);
-	--accent: var(--rule);
-	--accent-foreground: var(--ink);
-	--destructive: var(--flag);
-	--border: var(--hair);
-	--input: var(--hair);
-	--ring: var(--focus);
-}
-
-@theme inline {
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--color-card: var(--card);
-	--color-card-foreground: var(--card-foreground);
-	--color-popover: var(--popover);
-	--color-popover-foreground: var(--popover-foreground);
-	--color-primary: var(--primary);
-	--color-primary-foreground: var(--primary-foreground);
-	--color-secondary: var(--secondary);
-	--color-secondary-foreground: var(--secondary-foreground);
-	--color-muted: var(--muted);
-	--color-muted-foreground: var(--muted-foreground);
-	--color-accent: var(--accent);
-	--color-accent-foreground: var(--accent-foreground);
-	--color-destructive: var(--destructive);
-	--color-border: var(--border);
-	--color-input: var(--input);
-	--color-ring: var(--ring);
-	--font-sans: var(--font-body);
-}
 
 /* The site layer styles bare elements (headings, inputs, paragraphs); inside the kit they give way.
    The kit's own utilities sit in a later layer and still win. */

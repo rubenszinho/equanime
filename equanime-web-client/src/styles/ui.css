@@ -1,0 +1,82 @@
+/* shadcn/ui and Tailwind for the whole site, on Equânime's tokens (global.css). No Tailwind preflight:
+   global.css keeps styling the pages; shadcn components (every element has data-slot) get a small
+   reset of their own below. Classes come from our components and the assistant kit. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "tw-animate-css";
+@source "../components";
+@source "../layouts";
+@source "../pages";
+@source "../../node_modules/@rubrion/beholder-react/dist";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+	--background: var(--paper);
+	--foreground: var(--ink);
+	--card: var(--sheet);
+	--card-foreground: var(--ink);
+	--popover: var(--sheet);
+	--popover-foreground: var(--ink);
+	--primary: var(--stamp);
+	--primary-foreground: var(--stamp-ink);
+	--secondary: var(--rule);
+	--secondary-foreground: var(--ink);
+	--muted: var(--rule);
+	--muted-foreground: var(--ink-soft);
+	--accent: var(--rule);
+	--accent-foreground: var(--ink);
+	--destructive: var(--flag);
+	--border: var(--hair);
+	--input: var(--hair);
+	--ring: var(--focus);
+	--radius: 8px;
+}
+
+@theme inline {
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-ok: var(--ok);
+	--color-ok-bg: var(--ok-bg);
+	--color-flag: var(--flag);
+	--color-flag-bg: var(--flag-bg);
+	--color-maybe: var(--maybe);
+	--color-maybe-bg: var(--maybe-bg);
+	--color-ink-faint: var(--ink-faint);
+	--color-paper: var(--paper);
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+	--font-sans: var(--font-body);
+	--font-display: var(--font-display);
+}
+
+/* What Tailwind's preflight would give shadcn's elements; the site's classes (.btn) still win over it. */
+@layer ui-base {
+	[data-slot], [data-slot]::before, [data-slot]::after { box-sizing: border-box; border: 0 solid; }
+	button[data-slot], a[data-slot] { font: inherit; color: inherit; background: transparent; text-decoration: none; cursor: pointer; }
+	[data-slot] :is(h2, p) { margin: 0; }
+	[data-slot] svg { flex: none; }
+}
+
+/* Menu entries are links styled as menu items, not as the site's links. */
+@layer components {
+	a[data-slot="dropdown-menu-item"] { color: inherit; text-decoration: none; }
+}

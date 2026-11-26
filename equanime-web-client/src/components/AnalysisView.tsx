@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { collection, roles, ruleTitles, statusLabels, steps, view } from "../data/copy";
 import { api } from "../lib/api";
 import { day, untilDeletion } from "../lib/expiry";
+import { AnimatePresence, motion } from "motion/react";
 import type { AnalysisResponse, Evidence, Participant, RuleCheck } from "../lib/board";
 import Verdict, { type ResultStatus } from "./Verdict";
 
@@ -103,7 +104,7 @@ export default function AnalysisView({ analysisId }: { analysisId: string }) {
 				<section key={role} className="group">
 					<h2>{analysis.type === "academic" ? (role === "titular" ? "Titulares" : "Suplentes") : view.reviewers}</h2>
 					{group.map((item, index) => (
-						<article key={`${role}-${index}`} className="sheet reviewer">
+						<article key={`${role}-${index}`} className="sheet reviewer" style={{ "--i": index } as React.CSSProperties}>
 							<header>
 								<div>
 									<h3>{item.reviewer.name}</h3>
@@ -146,7 +147,11 @@ function Progress({ status, message }: { status: string; message: string }) {
 					</li>
 				))}
 			</ol>
-			<p className="soft"><strong>{statusLabels[status] ?? status}.</strong> {terminal.has(status) ? null : message}</p>
+			<AnimatePresence mode="wait" initial={false}>
+				<motion.p key={`${status}:${message}`} className="soft progress__message" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2 }}>
+					<strong>{statusLabels[status] ?? status}.</strong> {terminal.has(status) ? null : message}
+				</motion.p>
+			</AnimatePresence>
 		</section>
 	);
 }

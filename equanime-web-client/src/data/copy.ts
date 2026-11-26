@@ -8,6 +8,15 @@ export const site = {
 	nav: { how: "Como funciona", start: "Nova análise", mine: "Minhas análises", account: "Conta", signIn: "Entrar", dark: "Usar tema escuro", light: "Usar tema claro" },
 };
 
+export const menu = {
+	open: (who: string) => `Menu da conta de ${who}`,
+	signIn: "Entrar",
+	mine: "Minhas análises",
+	account: "Sua conta",
+	admin: "Administração",
+	signOut: "Sair",
+};
+
 export const home = {
 	title: "Equânime: conflito de interesses em bancas",
 	headline: "Antes de aprovar a banca, veja o que os currículos dizem.",
@@ -61,7 +70,7 @@ export const home = {
 	data: [
 		"Os currículos lidos, os resultados e o PDF ficam guardados por 90 dias e depois são apagados. Cada análise mostra a data, para você guardar o PDF antes.",
 		"Cada análise fica na conta de quem a criou e só pode ser aberta por essa pessoa.",
-		"Quem entra com e-mail da USP (@usp.br ou de uma unidade, como @icmc.usp.br) usa sem limite. Outras contas usam créditos: um por avaliador analisado.",
+		"Por enquanto, a Equânime está aberta só para e-mails da USP (@usp.br ou de uma unidade, como @icmc.usp.br), com uso ilimitado e gratuito.",
 		"A Equânime não contorna a verificação humana da Plataforma Lattes. Quando ela aparece, o currículo é marcado para envio manual.",
 		"O resultado é apoio à decisão. A composição da banca é aprovada por uma pessoa.",
 	],
@@ -246,6 +255,13 @@ export const account = {
 	since: (date: string) => `Conta criada em ${date}.`,
 	planTitle: "Uso",
 	unlimited: (institution: string) => `Ilimitado: e-mail institucional (${institution}). As análises não usam créditos.`,
+	unlimitedTag: (institution: string) => `Acesso ilimitado, ${institution}`,
+	analysesTitle: "Análises",
+	loading: "Carregando",
+	count: (n: number) => (n === 0 ? "Nenhuma análise" : `${n} análise${n === 1 ? "" : "s"}`),
+	nextDeletion: (date: string, days: number) => `A próxima a ser apagada sai em ${date} (${days <= 1 ? "menos de um dia" : `${days} dias`}).`,
+	cancel: "Cancelar",
+	deleteFailed: "A conta não foi apagada. Tente de novo.",
 	credits: (n: number) => `${n} crédito${n === 1 ? "" : "s"}`,
 	creditsLead: "Cada avaliador analisado usa um crédito. Uma análise que falha devolve os créditos. Reanalisar não custa nada.",
 	ask: "Para receber créditos, escreva para",

@@ -8,6 +8,8 @@
   "exclude": ["dist", "vitest.config.ts", "playwright.config.ts", "e2e"],
   "compilerOptions": {
     "jsx": "react-jsx",
-    "types": ["./worker-configuration.d.ts"]
+    "types": ["./worker-configuration.d.ts"],
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"] }
   }
 }

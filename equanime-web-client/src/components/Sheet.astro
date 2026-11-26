@@ -44,8 +44,7 @@ const s = home.sheet;
 	.name { display: grid; }
 	small { color: var(--ink-soft); font-size: 0.8rem; }
 	/* The one moment of motion: the stamps land in turn. */
-	li :global(.verdict) { animation: stamp 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; animation-delay: calc(0.5s + var(--i) * 0.22s); }
+	li :global(.verdict) { animation: eq-stamp 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; animation-delay: calc(0.5s + var(--i) * 0.22s); }
 	section + section li :global(.verdict) { animation-delay: calc(1.2s + var(--i) * 0.22s); }
-	@keyframes stamp { from { opacity: 0; transform: scale(1.35) rotate(-6deg); } }
 	@media (max-width: 420px) { li { flex-direction: column; align-items: flex-start; gap: 0.35rem; } .board { rotate: none; } }
 </style>
