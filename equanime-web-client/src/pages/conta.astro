@@ -1,0 +1,17 @@
+---
+export const prerender = false;
+
+import Layout from "../layouts/Layout.astro";
+import Account from "../components/Account";
+import { account } from "../data/copy";
+import "../styles/app.css";
+
+// The middleware let only a confirmed account in.
+const data = Astro.locals.account!;
+---
+
+<Layout title={`${account.pageTitle} | Equânime`}>
+	<section class="wrap page page--narrow">
+		<Account client:load data={data} />
+	</section>
+</Layout>

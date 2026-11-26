@@ -24,6 +24,6 @@ Same owner and habits as rubry-monorepo:
 - LLM for ambiguous names: set `LLM_BASE_URL`/`LLM_MODEL` and the `LLM_API_KEY` secret (Brad workspace).
 - Register the tool and assistant in cortex's OpenWebUI with the advisor (`equanime-api/docs/cortex-validation.md`).
 - Issue #14's deadline (30/09/2026) has passed; report status on the issue.
-- Open the site to anonymous visitors (drop Access on the pages) and require login only for the
-  assistant and the analyses, so anyone can see what Equânime is. The video modal is already there for them.
+- Accounts replace Access (2026-11-25): delete the "Equânime" Access app once sign-up works in production.
+  Credits are granted by hand (`/admin`); selling them (Stripe, as rubry.ai) is a later step.
 - The videos carry a synthetic voice (`video/tts.py`); a human voice-over can replace it (`roteiro.pt-BR.md`). Then an English version.

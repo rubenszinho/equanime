@@ -156,6 +156,7 @@ export const AnalysisSchema = z
 		}),
 		created_at: z.string(),
 		updated_at: z.string(),
+		expires_at: z.string().openapi({ description: "Quando a análise, os currículos coletados e o relatório serão apagados. Lembre o usuário de baixar o PDF antes." }),
 	})
 	.openapi("Analysis");
 
@@ -171,6 +172,7 @@ export const AnalysisListSchema = z
 				summary: AnalysisSchema.shape.summary,
 				web_url: z.string().nullable(),
 				created_at: z.string(),
+				expires_at: z.string(),
 			}),
 		),
 	})

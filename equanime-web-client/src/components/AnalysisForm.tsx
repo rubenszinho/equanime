@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { form } from "../data/copy";
+import { cost, form } from "../data/copy";
 import { api } from "../lib/api";
 import { validateBoard, type BoardInput, type FieldErrors, type ReviewerInput } from "../lib/board";
 
@@ -27,7 +27,13 @@ export default function AnalysisForm({ showExample = false }: { showExample?: bo
 	const [failure, setFailure] = useState("");
 	const [pending, setPending] = useState(false);
 	const [hydrated, setHydrated] = useState(false);
-	useEffect(() => setHydrated(true), []);
+	const [plan, setPlan] = useState<{ unlimited: boolean; institution: string | null; credits: number | null } | null>(null);
+	const [short, setShort] = useState(false);
+	useEffect(() => {
+		setHydrated(true);
+		// The account's plan: free institutions see nothing about credits; others see what this board costs.
+		api<{ unlimited: boolean; institution: string | null; credits: number | null }>("/conta").then((reply) => reply.ok && setPlan(reply.body));
+	}, []);
 
 	const academic = Boolean(advisor.name.trim() || advisor.lattes_url.trim());
 
@@ -53,6 +59,7 @@ export default function AnalysisForm({ showExample = false }: { showExample?: bo
 			body: JSON.stringify(input),
 		});
 		if (!reply.ok) {
+			setShort(reply.status === 402);
 			setFailure(reply.message);
 			setPending(false);
 			return;
@@ -149,7 +156,8 @@ export default function AnalysisForm({ showExample = false }: { showExample?: bo
 
 			<div className="send">
 				<p className="soft" aria-live="polite">{academic ? form.kindAcademic : form.kindSelection}</p>
-				{failure ? <p className="error" role="alert">{failure}</p> : null}
+				{plan && !plan.unlimited && plan.credits !== null ? <p className="soft" aria-live="polite">{cost.needs(reviewers.length, plan.credits)}</p> : null}
+				{failure ? <p className="error" role="alert">{failure} {short ? <a href="/conta">{form.errors.credits}</a> : null}</p> : null}
 				<button type="submit" className="btn btn--primary" disabled={pending} aria-busy={pending}>{pending ? form.submitting : form.submit}</button>
 			</div>
 		</form>

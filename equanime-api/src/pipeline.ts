@@ -6,6 +6,7 @@ import { resolveAmbiguousIdentity } from "./llm";
 import { renderReport } from "./pdf";
 import { logError, logInfo } from "./log";
 import { matchNames } from "./normalize";
+import { refundAnalysis } from "./accounts";
 import { completeAnalysis, getUpload, listParticipants, replaceResults, saveCollection, updateStatus } from "./repository";
 import { evaluateReviewer, resultLabel } from "./rules";
 
@@ -112,6 +113,8 @@ export async function runAnalysis(env: CloudflareBindings, analysisId: string, r
 				at: new Date().toISOString(),
 				error: message,
 			});
+			// Nothing was checked: the credits it took go back.
+			await refundAnalysis(env.DB, analysisId);
 		});
 	}
 }

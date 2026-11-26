@@ -73,4 +73,47 @@
 	.file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; min-height: 0; }
 	.file:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
 	.reprocess { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+
+	/* Expiry: quiet until the last two weeks, then a warning band. */
+	.expiry { margin-top: 0.25rem; }
+	.expiry--soon { padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid var(--maybe); background: var(--maybe-bg); color: var(--ink); font-size: 0.95rem; }
+
+	/* Accounts */
+	.page--narrow { max-width: 560px; }
+	.box { padding: clamp(1.1rem, 3vw, 1.75rem); display: grid; gap: 1rem; margin-bottom: 1.25rem; }
+	.box h1 { font-size: clamp(1.7rem, 4vw, 2.2rem); }
+	.box h2 { font-size: 1.3rem; }
+	.login .btn--primary { justify-self: start; }
+	.login__links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; color: var(--ink-soft); }
+	.link { padding: 0; border: 0; background: none; color: var(--stamp); font: inherit; text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px; cursor: pointer; min-height: 0; overflow-wrap: anywhere; text-align: left; }
+	.credits { font: 600 1.6rem/1.2 var(--font-display); }
+	.account__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+	.account__delete { display: grid; gap: 0.75rem; }
+	.account__delete .btn { justify-self: start; }
+	.btn--danger { background: transparent; color: var(--flag); border-color: var(--flag); }
+	.btn--danger:hover:not(:disabled) { background: var(--flag-bg); }
+	.ledger { list-style: none; margin: 0; padding: 0; display: grid; }
+	.ledger li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.55rem 0; border-top: 1px solid var(--rule); }
+	.ledger li:first-child { border-top: 0; }
+	.ledger__n { font-weight: 650; color: var(--ok); white-space: nowrap; }
+	.ledger__n--out { color: var(--ink-soft); }
+
+	/* My analyses */
+	.mine { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; gap: 0.75rem; }
+	.mine__item { padding: 1rem 1.15rem; display: grid; gap: 0.5rem; }
+	.mine__link { display: grid; gap: 0.15rem; color: var(--ink); text-decoration: none; }
+	.mine__link:hover .mine__who { text-decoration: underline; }
+	.mine__who { font-weight: 650; overflow-wrap: anywhere; }
+	.mine__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 1rem; }
+	.mine__status { font-weight: 600; }
+	.badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 4px; font-weight: 650; }
+	.badge--soon { color: var(--maybe); background: var(--maybe-bg); border: 1px solid currentColor; }
+
+	/* Admin */
+	.admin { display: grid; gap: 1.5rem; }
+	.admin__grant { max-width: 560px; }
+	.admin__grant .btn { justify-self: start; }
+	.admin__table { overflow-x: auto; }
+	.admin table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+	.admin th, .admin td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
 }

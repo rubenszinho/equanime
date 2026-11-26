@@ -35,8 +35,10 @@ Run `npm run cf-typegen` after changing a binding (`worker-configuration.d.ts` i
 
 ## Auth
 
-- Web users: Cloudflare Access on `equanime.rubrion.ai`; the web Worker forwards the JWT
-  (`POLICY_AUD` lists the accepted AUD tags).
+- Web users: an Equânime account (`/conta/*`, `src/routes/conta.ts`); the web Worker sends
+  `Bearer <WEB_KEY>` and `X-Equanime-Session` (the token from its cookie). Only it calls `/conta/acesso`.
+- Credits: `FREE_DOMAINS` are unlimited; other accounts spend one credit per reviewer (402 when short).
+  `ADMINS` (secret, comma-separated emails) use `GET /admin/usuarios` and `POST /admin/creditos`.
 - OpenWebUI: `Authorization: Bearer <OPENWEBUI_KEY>`.
 - The assistant (`equanime-agent`): `Bearer <AGENT_KEY>` plus `X-Equanime-Person`, the person it acts for; the header means nothing without the key.
 - Each analysis, PDF, upload and document belongs to its caller; others get 404.

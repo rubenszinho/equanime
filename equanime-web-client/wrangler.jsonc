@@ -4,7 +4,8 @@
 	"compatibility_date": "2026-10-14",
 	"compatibility_flags": ["global_fetch_strictly_public", "nodejs_compat"],
 	"main": "@astrojs/cloudflare/entrypoints/server",
-	// Production. The whole hostname sits behind Cloudflare Access; the API gets the user's JWT through the binding.
+	// Production. People sign in with an Equânime account (cookie eq_u); the API resolves the session
+	// with WEB_KEY, a secret only this Worker and equanime-api hold.
 	"workers_dev": false,
 	"preview_urls": false,
 	"routes": [{ "pattern": "equanime.rubrion.ai", "custom_domain": true }],
@@ -20,9 +21,8 @@
 	"vars": {
 		// Empty in production (the service binding is used); .dev.vars points it at a local API.
 		"EQUANIME_API_URL": "",
-		// The assistant checks the Access token itself: it acts for whoever this says.
-		"TEAM_DOMAIN": "https://rubrion.cloudflareaccess.com",
-		"POLICY_AUD": "52c8e31d91b80da17ecca375adc8050784e2fca741a661b9b60e198641c88a61"
+		// Turnstile on sign-up and "forgot password" when set (with the TURNSTILE_SECRET secret).
+		"TURNSTILE_SITE_KEY": ""
 	},
 	"services": [
 		{

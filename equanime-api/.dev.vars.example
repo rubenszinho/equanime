@@ -9,3 +9,7 @@ LLM_BASE_URL=
 LLM_MODEL=
 LLM_API_KEY=
 OPENWEBUI_KEY=
+OTP_LOG=1
+# The web app's key (same value in equanime-web-client/.dev.vars).
+WEB_KEY=dev-web-key
+ADMINS=dev@usp.br,admin@example.com

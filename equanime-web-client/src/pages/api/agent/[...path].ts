@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { createAgentGateway } from "@rubrion/beholder-server/gateway";
-import { accessEmail, displayName } from "../../../lib/access";
+import { currentAccount } from "../../../lib/session";
 
 export const prerender = false;
 
@@ -9,8 +9,8 @@ export const prerender = false;
 const gateway = createAgentGateway({
 	agent: () => env.AGENT,
 	identify: async (c) => {
-		const email = await accessEmail(c.req.raw, env);
-		return email ? { tenant: "equanime", person: email, role: "member", name: await displayName(c.req.raw, email) } : null;
+		const account = await currentAccount(c.req.raw);
+		return account?.confirmed ? { tenant: "equanime", person: account.email, role: "member", name: account.name } : null;
 	},
 });
 

@@ -3,6 +3,7 @@ import type { ParticipantRow, ReviewerChecks, ResultStatus, ReviewerRole } from 
 import { RESULT_LABELS } from "./domain";
 import { getAnalysis, listParticipants, listResults } from "./repository";
 import { envString } from "./settings";
+import { expiresAt } from "./retention";
 
 const TERMINAL = new Set(["completed", "completed_with_warnings", "failed"]);
 
@@ -58,6 +59,7 @@ export async function presentAnalysis(env: CloudflareBindings, id: string) {
 		report_url: analysis.report_key ? `/analises/${analysis.id}/relatorio.pdf` : null,
 		created_at: analysis.created_at,
 		updated_at: analysis.updated_at,
+		expires_at: expiresAt(env, analysis.created_at),
 	});
 }
 

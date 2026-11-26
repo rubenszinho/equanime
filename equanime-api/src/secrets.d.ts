@@ -5,6 +5,9 @@ interface CloudflareBindings {
 	ACCESS_CLIENT_SECRET?: string;
 	OPENWEBUI_KEY?: string;
 	AGENT_KEY?: string;
+	WEB_KEY?: string;
+	// Comma-separated emails that see accounts and grant credits; a secret so the emails stay out of the repo.
+	ADMINS?: string;
 }
 
 declare module "*.ttf" {

@@ -5,7 +5,7 @@ export const site = {
 	description: "Verifique conflitos de interesse em bancas acadêmicas e de concurso a partir dos Currículos Lattes, com evidências que uma pessoa pode conferir.",
 	by: "Feito pela Rubrion",
 	byUrl: "https://rubrion.ai",
-	nav: { how: "Como funciona", start: "Nova análise", dark: "Usar tema escuro", light: "Usar tema claro" },
+	nav: { how: "Como funciona", start: "Nova análise", mine: "Minhas análises", account: "Conta", signIn: "Entrar", dark: "Usar tema escuro", light: "Usar tema claro" },
 };
 
 export const home = {
@@ -59,8 +59,9 @@ export const home = {
 	namesBody: "Ricardo Marcacini, Ricardo M. Marcacini e MARCACINI, R. M. são reconhecidos como a mesma pessoa. Quando o Lattes traz o identificador de 16 dígitos de um coautor, a identificação é exata.",
 	dataTitle: "Dados e limites",
 	data: [
-		"Os currículos lidos, os resultados e o PDF ficam guardados por 90 dias e depois são apagados.",
-		"Cada análise só pode ser aberta por quem a criou.",
+		"Os currículos lidos, os resultados e o PDF ficam guardados por 90 dias e depois são apagados. Cada análise mostra a data, para você guardar o PDF antes.",
+		"Cada análise fica na conta de quem a criou e só pode ser aberta por essa pessoa.",
+		"Quem entra com e-mail da USP (@usp.br ou de uma unidade, como @icmc.usp.br) usa sem limite. Outras contas usam créditos: um por avaliador analisado.",
 		"A Equânime não contorna a verificação humana da Plataforma Lattes. Quando ela aparece, o currículo é marcado para envio manual.",
 		"O resultado é apoio à decisão. A composição da banca é aprovada por uma pessoa.",
 	],
@@ -134,6 +135,7 @@ export const form = {
 		duplicate: "O mesmo currículo aparece mais de uma vez entre os avaliadores.",
 		self: "O candidato não pode ser avaliador da própria banca.",
 		session: "Sua sessão expirou. Recarregue a página para entrar de novo.",
+		credits: "Ver créditos na sua conta",
 		network: "A Equânime não respondeu. Verifique a conexão e tente de novo.",
 		rejected: "A análise não foi aceita.",
 	},
@@ -183,6 +185,108 @@ export const view = {
 	},
 	failed: "A análise não foi concluída por um erro interno. Nenhuma ausência de conflito foi presumida.",
 	retry: "Tentar de novo",
+	expires: (date: string, days: number) => `Esta análise, os currículos lidos e o relatório serão apagados em ${date} (${days <= 1 ? "em menos de um dia" : `em ${days} dias`}).`,
+	expiresSave: "Baixe o PDF para guardá-lo.",
+};
+
+// The deletion warning turns prominent in the last two weeks.
+export const EXPIRY_WARNING_DAYS = 14;
+
+export const cost = {
+	free: (institution: string) => `Uso ilimitado: e-mail institucional (${institution}).`,
+	needs: (needed: number, credits: number) => `Esta análise usa ${needed} crédito${needed === 1 ? "" : "s"} (1 por avaliador). Você tem ${credits}.`,
+	short: "Créditos insuficientes.",
+};
+
+export const login = {
+	pageTitle: "Entrar",
+	signIn: { title: "Entrar na Equânime", submit: "Entrar", switch: "Ainda não tem conta?", switchAction: "Criar conta" },
+	register: {
+		title: "Criar conta",
+		lead: "Com e-mail da USP (@usp.br ou de uma unidade, como @icmc.usp.br) o uso é ilimitado e gratuito. Outros e-mails recebem créditos conforme combinado com a Rubrion.",
+		submit: "Criar conta",
+		switch: "Já tem conta?",
+		switchAction: "Entrar",
+	},
+	confirm: {
+		title: "Confirme seu e-mail",
+		lead: (email: string) => `Enviamos um código de 6 dígitos para ${email || "o seu e-mail"}. Ele vale por 10 minutos.`,
+		submit: "Confirmar",
+		resend: "Enviar outro código",
+		resent: "Código enviado.",
+		other: "Usar outra conta",
+	},
+	forgot: {
+		title: "Trocar a senha",
+		lead: "Informe o e-mail da conta. Enviaremos um código para criar uma senha nova.",
+		send: "Enviar código",
+		code: "Código recebido por e-mail",
+		password: "Senha nova",
+		submit: "Trocar senha e entrar",
+		link: "Esqueci a senha",
+		back: "Voltar para entrar",
+	},
+	name: "Nome",
+	email: "E-mail",
+	password: "Senha",
+	passwordHint: "Pelo menos 8 caracteres.",
+	code: "Código",
+	working: "Aguarde",
+	network: "A Equânime não respondeu. Verifique a conexão e tente de novo.",
+};
+
+export const account = {
+	pageTitle: "Sua conta",
+	title: "Sua conta",
+	since: (date: string) => `Conta criada em ${date}.`,
+	planTitle: "Uso",
+	unlimited: (institution: string) => `Ilimitado: e-mail institucional (${institution}). As análises não usam créditos.`,
+	credits: (n: number) => `${n} crédito${n === 1 ? "" : "s"}`,
+	creditsLead: "Cada avaliador analisado usa um crédito. Uma análise que falha devolve os créditos. Reanalisar não custa nada.",
+	ask: "Para receber créditos, escreva para",
+	contact: "hello@rubrion.ai",
+	historyTitle: "Histórico de créditos",
+	historyEmpty: "Nenhum movimento ainda.",
+	kinds: { grant: "Créditos recebidos", charge: "Análise", refund: "Devolução (análise falhou)" } as Record<string, string>,
+	retention: (days: number) => `As análises ficam guardadas por ${days} dias a partir da criação e depois são apagadas, com os currículos lidos e o relatório.`,
+	mine: "Ver minhas análises",
+	signOut: "Sair",
+	deleteTitle: "Apagar a conta",
+	deleteLead: "Apaga a conta e todas as suas análises, currículos enviados e relatórios. Não pode ser desfeito.",
+	deletePassword: "Senha para confirmar",
+	deleteSubmit: "Apagar a conta e as análises",
+	admin: "Administração",
+};
+
+export const mine = {
+	pageTitle: "Minhas análises",
+	title: "Minhas análises",
+	lead: (days: number) => `As análises são apagadas ${days} dias depois de criadas. Baixe o PDF das que precisar guardar.`,
+	empty: "Você ainda não fez nenhuma análise.",
+	start: "Analisar uma banca",
+	loading: "Carregando",
+	candidate: "Candidato",
+	untitled: "Banca sem título",
+	created: "Criada em",
+	expires: "Apagada em",
+	soon: (days: number) => (days <= 1 ? "Apagada em menos de um dia" : `Apagada em ${days} dias`),
+	error: "Não foi possível carregar as análises.",
+};
+
+export const admin = {
+	pageTitle: "Administração",
+	title: "Contas",
+	email: "E-mail",
+	name: "Nome",
+	credits: "Créditos",
+	analyses: "Análises",
+	free: "Ilimitado",
+	unconfirmed: "e-mail não confirmado",
+	grantTitle: "Dar ou retirar créditos",
+	amount: "Créditos (negativo retira)",
+	note: "Observação",
+	submit: "Aplicar",
+	done: (email: string, n: number) => `${email} agora tem ${n} créditos.`,
 };
 
 export const intro = {

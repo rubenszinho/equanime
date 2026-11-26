@@ -1,0 +1,23 @@
+---
+export const prerender = false;
+
+import { env } from "cloudflare:workers";
+import Layout from "../layouts/Layout.astro";
+import Login from "../components/Login";
+import { login } from "../data/copy";
+import { currentAccount } from "../lib/session";
+import "../styles/app.css";
+
+// Only paths on this site: a sign-in link can't send people elsewhere.
+const asked = Astro.url.searchParams.get("volta") ?? "";
+const back = /^\/(?!\/)[^\s]*$/.test(asked) ? asked : "/analises";
+const account = await currentAccount(Astro.request);
+if (account?.confirmed) return Astro.redirect(back);
+const siteKey = String((env as unknown as { TURNSTILE_SITE_KEY?: string }).TURNSTILE_SITE_KEY ?? "");
+---
+
+<Layout title={`${login.pageTitle} | Equânime`} assistant={false}>
+	<section class="wrap page page--narrow">
+		<Login client:load back={back} confirm={Boolean(account) || Astro.url.searchParams.has("confirmar")} siteKey={siteKey} />
+	</section>
+</Layout>

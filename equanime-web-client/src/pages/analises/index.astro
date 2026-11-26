@@ -1,0 +1,20 @@
+---
+export const prerender = false;
+
+import Layout from "../../layouts/Layout.astro";
+import MyAnalyses from "../../components/MyAnalyses";
+import { mine } from "../../data/copy";
+import "../../styles/app.css";
+
+const days = Astro.locals.account?.retention_days ?? 90;
+---
+
+<Layout title={`${mine.pageTitle} | Equânime`}>
+	<section class="wrap page">
+		<header class="intro">
+			<h1>{mine.title}</h1>
+			<p class="soft">{mine.lead(days)}</p>
+		</header>
+		<MyAnalyses client:load />
+	</section>
+</Layout>

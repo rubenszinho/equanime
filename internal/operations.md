@@ -35,9 +35,9 @@ Order: equanime-api (`npx wrangler d1 migrations apply DB --remote`, then `npx w
 | D1 | `equanime` (`cdb6fe43-ed73-474a-9469-7af6366f04b6`, enam) |
 | R2 | `equanime-evidence` |
 | Workflow | `equanime-analysis` (created by the API deploy) |
-| Workers | `equanime-api` on `api.equanime.rubrion.ai` (no Access; Bearer or forwarded JWT), `equanime-web-client` on `equanime.rubrion.ai`, `equanime-agent` on `agent.equanime.rubrion.ai` (`/v1` with a key; the chat routes only by service binding) |
+| Workers | `equanime-api` on `api.equanime.rubrion.ai` (no Access; Bearer keys, or `WEB_KEY` + session from the web Worker), `equanime-web-client` on `equanime.rubrion.ai`, `equanime-agent` on `agent.equanime.rubrion.ai` (`/v1` with a key; the chat routes only by service binding) |
 | D1 (agent) | `equanime-agent-memory` (`d1b0234f-6f0e-4fd6-94ac-70a742744c07`, enam): the web chat's conversations |
-| Access app "Equânime" | `equanime.rubrion.ai`, login by Google only, auto-redirect (IdP "Google — Equânime", OAuth client in GCP project `rubrion`, credentials in Infisical `/cloudflare-access-google`); policies Owner and USP (`@usp.br`, `@icmc.usp.br`); AUD in `POLICY_AUD` |
+| Access app "Equânime" | `equanime.rubrion.ai`, Google login, policies Owner and USP. Replaced by Equânime's own accounts (2026-11-25): to be deleted once accounts are live in production |
 | Access app "Equânime collector" | `equanime-collector.rubrion.ai`, service token `equanime-api` only (expires 2027-10-30) |
 | Tunnel | `equanime-collector-prod` (`10126536-499d-4e20-90e7-61912b3f6145`), remotely managed, ingress → `http://collector:8090`, proxied CNAME |
 
@@ -47,7 +47,8 @@ Never printed; through stdin (`printf '%s' "$V" | npx wrangler secret put NAME`)
 
 | Where | Secrets |
 |---|---|
-| equanime-api | `OPENWEBUI_KEY`, `COLLECTOR_TOKEN`, `COLLECTOR_ACCESS_SECRET` (set straight from the token creation; only in the Worker, rotate the service token to copy it), `LLM_API_KEY` (not set yet) |
+| equanime-api | `WEB_KEY` (also on equanime-web-client), `ADMINS` (emails that grant credits), `OPENWEBUI_KEY`, `COLLECTOR_TOKEN`, `COLLECTOR_ACCESS_SECRET` (set straight from the token creation; only in the Worker, rotate the service token to copy it), `LLM_API_KEY` (not set yet) |
+| equanime-web-client | `WEB_KEY`, `TURNSTILE_SECRET` (optional, with the `TURNSTILE_SITE_KEY` var) |
 | collector `.env` | `EQUANIME_COLLECTOR_TOKEN` (= `COLLECTOR_TOKEN`), `TUNNEL_TOKEN` |
 | equanime-agent | `AGENT_KEY` (also on equanime-api), `V1_KEY_RUBRY` (the key sealed in rubry.ai's Hub listing `equanime`; rotated 2026-11-12, not yet in Infisical: the old copy at `rubry` `/rubry-agent/EQUANIME_API_KEY` is stale. Rotating again: set it here and save it in the listing's Edit form, same value), `V1_KEY_OPENWEBUI`; Infisical `/equanime-agent` |
 

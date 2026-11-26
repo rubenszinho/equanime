@@ -77,16 +77,37 @@ describe("analysis form", () => {
 		expect(screen.getByText("Será analisada como banca de concurso ou processo seletivo.")).toBeTruthy();
 		await user.click(screen.getByRole("button", { name: "Analisar banca" }));
 		expect(screen.getByText("O mesmo currículo aparece mais de uma vez entre os avaliadores.")).toBeTruthy();
-		expect(fetchMock).not.toHaveBeenCalled();
+		const sent = () => fetchMock.mock.calls.filter((call) => call[0] === "/api/analises");
+		expect(sent()).toHaveLength(0);
 		await user.click(screen.getAllByRole("button", { name: /Remover/ })[1]!);
 		await user.click(screen.getByRole("button", { name: "Analisar banca" }));
-		const payload = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+		const payload = JSON.parse(String(sent()[0]?.[1]?.body));
 		expect(payload.advisor).toBeUndefined();
 		expect(payload.reviewers).toHaveLength(1);
 		expect(assign).toHaveBeenCalledWith("/analises/abc");
 	});
 
-	it("explains an expired Access session instead of failing silently", async () => {
+	it("shows what a board costs outside the free institutions, and points to the account when credits run short", async () => {
+		const user = userEvent.setup();
+		const fetchMock = vi.fn((path: string) => Promise.resolve(path === "/api/conta"
+			? json({ unlimited: false, institution: null, credits: 1 }, 200)
+			: json({ status: "error", error_type: "insufficient_credits", message: "Você tem 1 crédito(s); esta análise precisa de 2 (1 por avaliador)." }, 402)));
+		vi.stubGlobal("fetch", fetchMock);
+		render(<AnalysisForm />);
+		expect(await screen.findByText("Esta análise usa 2 créditos (1 por avaliador). Você tem 1.")).toBeTruthy();
+		await user.type(screen.getByLabelText("Nome do candidato"), "João da Silva");
+		await user.type(screen.getByLabelText("Lattes do candidato"), "http://lattes.cnpq.br/1111111111111111");
+		for (const index of [1, 2]) {
+			await user.type(screen.getByLabelText(`Nome do avaliador ${index}`), `Pessoa ${index}`);
+			await user.type(screen.getByLabelText(`Lattes do avaliador ${index}`), `http://lattes.cnpq.br/333333333333333${index}`);
+		}
+		await user.click(screen.getByRole("button", { name: "Analisar banca" }));
+		const alert = await screen.findByRole("alert");
+		expect(alert.textContent).toContain("precisa de 2");
+		expect(alert.querySelector("a")?.getAttribute("href")).toBe("/conta");
+	});
+
+	it("explains an expired session instead of failing silently", async () => {
 		const user = userEvent.setup();
 		vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200, headers: new Headers({ "content-type": "text/html" }), json: async () => { throw new Error("html"); } }));
 		render(<AnalysisForm />);

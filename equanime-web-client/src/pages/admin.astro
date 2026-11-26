@@ -1,0 +1,14 @@
+---
+export const prerender = false;
+
+import Layout from "../layouts/Layout.astro";
+import Admin from "../components/Admin";
+import { admin } from "../data/copy";
+import "../styles/app.css";
+---
+
+<Layout title={`${admin.pageTitle} | Equânime`}>
+	<section class="wrap page">
+		<Admin client:load />
+	</section>
+</Layout>

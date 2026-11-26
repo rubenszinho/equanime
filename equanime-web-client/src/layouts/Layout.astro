@@ -11,9 +11,11 @@ interface Props {
 	description?: string;
 	/** On an analysis page, the assistant offers to explain it. */
 	analysisId?: string;
+	/** The chat needs an account; the sign-in page leaves it out. */
+	assistant?: boolean;
 }
 
-const { title, description = site.description, analysisId } = Astro.props;
+const { title, description = site.description, analysisId, assistant = true } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 ---
 
@@ -45,18 +47,32 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 					<svg class="theme__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>
 					<svg class="theme__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
 				</button>
+				<a class="how" href="/analises" data-signed-in hidden>{site.nav.mine}</a>
+				<a class="acct" href="/entrar" data-account data-signed-out={site.nav.signIn}>{site.nav.signIn}</a>
 				<a class="btn btn--primary btn--small" href="/analises/nova">{site.nav.start}</a>
 			</nav>
 		</header>
 		<main>
 			<slot />
 		</main>
-		<Assistant client:only="react" analysisId={analysisId} />
+		{assistant ? <Assistant client:only="react" analysisId={analysisId} /> : null}
 		<Intro />
 		<footer class="wrap foot">
 			<span>{site.name}: apoio à decisão para bancas.</span>
 			<a href={site.byUrl}>{site.by}</a>
 		</footer>
+		<script>
+			// Signed in (the page may be static): the account's first name links to /conta.
+			fetch("/api/me").then((reply) => (reply.ok ? (reply.json() as Promise<{ name?: string }>) : null)).then((me) => {
+				if (!me) return;
+				const link = document.querySelector<HTMLAnchorElement>("[data-account]");
+				if (link) {
+					link.href = "/conta";
+					link.textContent = (me.name ?? "").split(" ")[0] || "Conta";
+				}
+				document.querySelectorAll<HTMLElement>("[data-signed-in]").forEach((item) => (item.hidden = false));
+			}).catch(() => {});
+		</script>
 		<script>
 			const toggles = [...document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]")];
 			const label = () => toggles.forEach((button) => {

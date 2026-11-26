@@ -51,6 +51,8 @@ export type AnalysisResponse = {
 	needs_upload: boolean;
 	report_url: string | null;
 	created_at: string;
+	/** When the API deletes it (created_at + its retention). */
+	expires_at?: string;
 };
 
 // Same hosts the API accepts, with the 16-digit Lattes ID.

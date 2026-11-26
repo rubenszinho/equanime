@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { collection, roles, ruleTitles, statusLabels, steps, view } from "../data/copy";
 import { api } from "../lib/api";
+import { day, untilDeletion } from "../lib/expiry";
 import type { AnalysisResponse, Evidence, Participant, RuleCheck } from "../lib/board";
 import Verdict, { type ResultStatus } from "./Verdict";
 
@@ -9,6 +10,15 @@ const terminal = new Set(["completed", "completed_with_warnings", "failed"]);
 const date = (iso: string) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
 
 const lattesId = (url: string) => url.match(/[0-9]{16}/)?.[0] ?? url;
+
+function Expiry({ at, hasPdf }: { at: string; hasPdf: boolean }) {
+	const { days, soon } = untilDeletion(at);
+	return (
+		<p className={soon ? "expiry expiry--soon" : "expiry soft small"} role={soon ? "status" : undefined}>
+			{view.expires(day(at), days)} {hasPdf ? view.expiresSave : null}
+		</p>
+	);
+}
 
 export default function AnalysisView({ analysisId }: { analysisId: string }) {
 	const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
@@ -64,6 +74,7 @@ export default function AnalysisView({ analysisId }: { analysisId: string }) {
 					{analysis.advisor ? <>{view.advisor}: {analysis.advisor.name}. </> : null}
 					{date(analysis.created_at)}
 				</p>
+				{analysis.expires_at ? <Expiry at={analysis.expires_at} hasPdf={Boolean(analysis.report_url)} /> : null}
 			</header>
 
 			<Progress status={analysis.status} message={analysis.message} />

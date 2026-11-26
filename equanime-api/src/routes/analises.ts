@@ -4,8 +4,10 @@ import { parseLattes, canonicalJson, deterministicId, sha256 } from "../normaliz
 import { attachUpload, countRecent, findByIdempotency, getAnalysis, getUpload, insertAnalysis, insertParticipant, listByActor, listParticipants, resetAnalysis } from "../repository";
 import { runAnalysis } from "../pipeline";
 import { presentAnalysis } from "../present";
-import { AnalysisListSchema, AnalysisSchema, CreateAnalysisSchema, ErrorSchema, ReprocessSchema } from "../schemas";
+import { AnalysisListSchema, AnalysisSchema, CreateAnalysisSchema, ErrorSchema, ReprocessSchema, type CreateAnalysisInput } from "../schemas";
 import { logError, logInfo } from "../log";
+import { balance, charge, payerFor, refundAnalysis } from "../accounts";
+import { expiresAt } from "../retention";
 import { envString } from "../settings";
 
 type AppEnv = { Bindings: CloudflareBindings; Variables: { actor: Actor } };
@@ -30,6 +32,7 @@ const createRouteDef = createRoute({
 		200: { description: "A mesma chave de idempotência já possuía esta análise.", content: { "application/json": { schema: AnalysisSchema } } },
 		400: { description: "Os dados da banca são inválidos. A mensagem diz o que corrigir.", content: { "application/json": { schema: ErrorSchema } } },
 		401: { description: "Credencial ausente ou inválida.", content: { "application/json": { schema: ErrorSchema } } },
+		402: { description: "A conta não tem créditos suficientes (1 por avaliador). Contas de instituições conveniadas, como a USP, não usam créditos. Diga ao usuário quantos créditos faltam e que ele pode pedir mais em web_url/conta.", content: { "application/json": { schema: ErrorSchema } } },
 		409: { description: "A chave de idempotência foi reutilizada com dados diferentes.", content: { "application/json": { schema: ErrorSchema } } },
 		429: { description: "Limite de análises do solicitante foi atingido.", content: { "application/json": { schema: ErrorSchema } } },
 		404: { description: "A análise registrada não pôde ser relida.", content: { "application/json": { schema: ErrorSchema } } },
@@ -41,7 +44,7 @@ const listRouteDef = createRoute({
 	path: "/analises",
 	tags: ["Análises"],
 	summary: "Lista as análises do solicitante",
-	description: "Use quando o usuário pedir as análises que já fez. Retorna as 20 mais recentes, da mais nova para a mais antiga, com estado e resumo. Para o resultado completo de uma delas, consulte GET /analises/{analysis_id}.",
+	description: "Use quando o usuário pedir as análises que já fez. Retorna as mais recentes (até 100), da mais nova para a mais antiga, com estado, resumo e expires_at, a data em que a análise e o relatório serão apagados. Lembre o usuário de baixar o PDF antes dessa data. Para o resultado completo de uma delas, consulte GET /analises/{analysis_id}.",
 	responses: {
 		200: { description: "Análises do solicitante.", content: { "application/json": { schema: AnalysisListSchema } } },
 	},
@@ -151,10 +154,31 @@ analysisRoutes.openapi(createRouteDef, async (c) => {
 	const recent = await countRecent(c.env.DB, actor.id, since);
 	if (recent >= Number(c.env.MAX_ANALYSES_PER_HOUR || "30")) return c.json({ status: "error" as const, error_type: "rate_limited", message: "Limite horário de análises atingido." }, 429);
 
-	const now = new Date().toISOString();
 	const id = idempotencyKey ? await deterministicId(idempotencyKey) : crypto.randomUUID();
+	// One credit per reviewer, unless the person's institution is free or the caller is an integration.
+	const payer = await payerFor(c.env, actor);
+	const cost = body.reviewers.length;
+	if (payer.kind === "none") return c.json({ status: "error" as const, error_type: "insufficient_credits", message: "Esta pessoa não tem conta no Equânime. Crie uma conta para receber créditos." }, 402);
+	if (payer.kind === "wallet" && !(await charge(c.env.DB, payer.userId, cost, id))) {
+		const left = await balance(c.env.DB, payer.userId);
+		return c.json({ status: "error" as const, error_type: "insufficient_credits", message: `Você tem ${left} crédito(s); esta análise precisa de ${cost} (1 por avaliador). Peça mais créditos na página da sua conta.` }, 402);
+	}
+	try {
+		await register(c.env, actor, id, idempotencyKey, payloadHash, body);
+	} catch (error) {
+		await refundAnalysis(c.env.DB, id);
+		throw error;
+	}
+	await start(c.env, (promise) => c.executionCtx.waitUntil(promise), id, id);
+	const created = await presentAnalysis(c.env, id);
+	if (!created) return c.json(notFound, 404);
+	return c.json(created, 202);
+});
+
+async function register(env: CloudflareBindings, actor: Actor, id: string, idempotencyKey: string | null, payloadHash: string, body: CreateAnalysisInput): Promise<void> {
+	const now = new Date().toISOString();
 	const type = body.advisor ? "academic" : "selection";
-	await insertAnalysis(c.env.DB, {
+	await insertAnalysis(env.DB, {
 		id, idempotency_key: idempotencyKey, payload_hash: payloadHash, type, status: "pending",
 		message: "A análise foi registrada e aguarda processamento.", work_title: body.work_title ?? null, actor: actor.id,
 		assistant_summary: null, summary_json: null, limitations: [], report_key: null, workflow_instance_id: null,
@@ -167,22 +191,18 @@ analysisRoutes.openapi(createRouteDef, async (c) => {
 	];
 	for (const row of rows) {
 		const lattes = parseLattes(row.person.lattes_url);
-		await insertParticipant(c.env.DB, {
+		await insertParticipant(env.DB, {
 			id: crypto.randomUUID(), analysis_id: id, kind: row.kind, reviewer_role: row.role, requested_name: row.person.name,
 			detected_name: null, lattes_url: row.person.lattes_url, lattes_id: lattes.ok ? lattes.id : "", collection_status: "pending",
 			collection_error: null, consulted_at: null, snapshot_key: null, upload_id: row.person.curriculum_ref ?? null, warnings: [],
 		});
 	}
 	logInfo("analysis_created", { analysis_id: id, type, curricula_requested: rows.length });
-	await start(c.env, (promise) => c.executionCtx.waitUntil(promise), id, id);
-	const created = await presentAnalysis(c.env, id);
-	if (!created) return c.json(notFound, 404);
-	return c.json(created, 202);
-});
+}
 
 analysisRoutes.openapi(listRouteDef, async (c) => {
 	const web = envString(c.env, "WEB_URL").replace(/\/$/, "");
-	const rows = await listByActor(c.env.DB, c.get("actor").id, 20);
+	const rows = await listByActor(c.env.DB, c.get("actor").id, 100);
 	return c.json({
 		analyses: rows.map((row) => ({
 			analysis_id: row.id,
@@ -193,6 +213,7 @@ analysisRoutes.openapi(listRouteDef, async (c) => {
 			summary: row.summary_json ? JSON.parse(row.summary_json) : null,
 			web_url: web ? `${web}/analises/${row.id}` : null,
 			created_at: row.created_at,
+			expires_at: expiresAt(c.env, row.created_at),
 		})),
 	}, 200);
 });

@@ -2,6 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { bodyLimit } from "hono/body-limit";
 import { authenticate, type Actor } from "./auth";
 import { analysisRoutes } from "./routes/analises";
+import { accountRoutes } from "./routes/conta";
 import { curriculumRoutes, UPLOAD_LIMIT } from "./routes/curriculos";
 import { DOCUMENT_LIMIT, documentRoutes } from "./routes/documentos";
 import { logError } from "./log";
@@ -31,10 +32,11 @@ export function createApp(): OpenAPIHono<AppEnv> {
 	app.route("/", analysisRoutes);
 	app.route("/", curriculumRoutes);
 	app.route("/", documentRoutes);
+	app.route("/", accountRoutes);
 	app.openAPIRegistry.registerComponent("securitySchemes", "bearer", {
 		type: "http",
 		scheme: "bearer",
-		description: "Chave da integração (OpenWebUI). Usuários da aplicação web entram pelo Cloudflare Access.",
+		description: "Chave da integração (OpenWebUI). Usuários da aplicação web entram com a conta do Equânime.",
 	});
 	app.doc("/openapi.json", {
 		openapi: "3.0.0",
@@ -50,7 +52,9 @@ export function createApp(): OpenAPIHono<AppEnv> {
 				"Obtenha o PDF em GET /analises/{analysis_id}/relatorio.pdf somente depois que report_url estiver preenchido.",
 				"Se needs_upload for verdadeiro, algum currículo não pôde ser lido automaticamente: peça ao usuário para abrir web_url, enviar o XML do Lattes e reprocessar. Esses avaliadores aparecem como ANÁLISE INCONCLUSIVA, nunca como sem conflito.",
 				"As regras são executadas pelo serviço. Não reconstrua a decisão a partir de dados brutos quando assistant_summary estiver presente.",
-				"Autenticação: Authorization: Bearer com a chave da integração, ou Cloudflare Access.",
+				"Autenticação: Authorization: Bearer com a chave da integração.",
+				"Cada avaliador analisado consome 1 crédito da conta da pessoa, exceto para instituições conveniadas (como a USP), que têm uso ilimitado. Sem créditos, POST /analises responde 402.",
+				"Análises e relatórios são apagados em expires_at. Lembre o usuário de baixar o PDF antes.",
 			].join(" "),
 		},
 	});

@@ -3,7 +3,7 @@
 | Part | What | Runs on |
 |---|---|---|
 | `equanime-api/` | Hono + Zod OpenAPI Worker: analyses, rules, PDF, uploads | Cloudflare, `api.equanime.rubrion.ai` |
-| `equanime-web-client/` | Astro + React site, PT-BR; proxies `/api/*` to the API by service binding; the floating assistant (Beholder) at `/api/agent/*` | Cloudflare, `equanime.rubrion.ai` (behind Access) |
+| `equanime-web-client/` | Astro + React site, PT-BR; proxies `/api/*` to the API by service binding; the floating assistant (Beholder) at `/api/agent/*` | Cloudflare, `equanime.rubrion.ai` (own accounts, cookie `eq_u`) |
 | `equanime-agent/` | The "Análise de Banca" agent (Mastra, Workers AI Gemma): Beholder routes for the web chat (service binding only) and an OpenAI-compatible `/v1` | Cloudflare, `agent.equanime.rubrion.ai` (`/v1` only) |
 | `video/` | Playwright + ffmpeg scripts that record the PT-BR demo and presentation videos from the local stack (`video/README.md`) | locally |
 | `equanime-collector/` | FastAPI: CNPq's institutional extractor, then CNPq's public search (Playwright), SQLite job queue | cortex.icmc.usp.br (venv + cron, no Docker there; `~/rubrion/infra/instances/cortex-icmc/equanime-collector`), tunnel `equanime-collector.rubrion.ai` (Access service token); oracle-rubrion-1's Docker stack is the stopped fallback |
@@ -57,7 +57,7 @@ same person as in the web pages. Who the person is (`src/caller.ts`, AsyncLocalS
 
 | Door | Person |
 |---|---|
-| Web chat (`/api/agent/*` → gateway → service binding) | the Access email, checked again by the web Worker (`src/lib/access.ts`) |
+| Web chat (`/api/agent/*` → gateway → service binding) | the signed-in account's email (`src/lib/session.ts`) |
 | `/v1` with `V1_KEY_RUBRY` (rubry.ai) | `rubry:<code>` from `X-Rubry-User` (rubry.ai's Hub: an HMAC per person and agent, never their account id) |
 | `/v1` with `V1_KEY_OPENWEBUI` | `openwebui:<email>` when OpenWebUI forwards user headers, else `service:openwebui` |
 
@@ -92,3 +92,19 @@ Agent Hub listing (`rubry.ai/agents/equanime`, published from the owner's accoun
 in the chat with Equânime's key (`V1_KEY_RUBRY`, sealed in the listing): rubry.ai calls `/v1`
 with it and `X-Rubry-User`. Not one of rubry-agent's built-in agents any more, so no Rubry
 credit is spent on it.
+
+## Accounts and credits
+
+No Cloudflare Access on the site: people register with email, password and a 6-digit email code
+(`equanime-api/src/routes/conta.ts`, `src/accounts.ts`, adapted from rubry.ai's). The web Worker
+keeps the session token in the HttpOnly cookie `eq_u` and calls the API with `Bearer WEB_KEY` plus
+`X-Equanime-Session` (`equanime-web-client/src/lib/session.ts`); the API resolves the session to the
+email, which stays the analyses' `actor`. `src/middleware.ts` sends private pages (`/analises*`,
+`/conta`, `/admin`) to `/entrar`. Codes come from `no-reply@rubrion.ai` (Email Sending, `EMAIL`);
+`OTP_LOG=1` logs them locally. Turnstile guards sign-up and "forgot" once `TURNSTILE_SITE_KEY` and
+`TURNSTILE_SECRET` are set on the web Worker.
+
+Who pays (`payerFor`): emails on `FREE_DOMAINS` (`usp.br`, any subdomain) use it without limit;
+integrations (`service:*`, `rubry:*`) too. Any other account spends credits, one per reviewer,
+charged atomically when the analysis is created (402 when short) and refunded once if the run ends
+`failed`; reprocessing is free. Accounts start at 0; `ADMINS` (a secret) grant credits at `/admin`.

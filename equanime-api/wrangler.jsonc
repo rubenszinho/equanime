@@ -17,7 +17,8 @@
 	// The PDF embeds Public Sans so Portuguese accents survive.
 	"rules": [{ "type": "Data", "globs": ["**/*.ttf"], "fallthrough": true }],
 	"vars": {
-		"AUTH_MODE": "access",
+		// "dev" skips sign-in locally; anything else requires an account session, an integration key or a service token.
+		"AUTH_MODE": "accounts",
 		"EXECUTION_MODE": "workflow",
 		// http: equanime-collector on cortex.icmc.usp.br (CNPq's extractor, then CNPq's public search);
 		// upload: users send the XML. Either way a CV no source reads goes to upload.
@@ -31,9 +32,11 @@
 		"MAX_REVIEWERS": "12",
 		"MAX_ANALYSES_PER_HOUR": "30",
 		"RETENTION_DAYS": "90",
-		"TEAM_DOMAIN": "https://rubrion.cloudflareaccess.com",
-		// Comma-separated AUD tags: the web app's Access application (and the API's, if it gets one).
-		"POLICY_AUD": "52c8e31d91b80da17ecca375adc8050784e2fca741a661b9b60e198641c88a61",
+		// Institutions whose people use Equânime for free and without limit: the domain or any subdomain
+		// (usp.br covers icmc.usp.br). Everyone else spends credits, one per reviewer.
+		"FREE_DOMAINS": "usp.br",
+		// "1" logs sign-in codes instead of emailing them (local dev).
+		"OTP_LOG": "",
 		"ACCESS_CLIENT_ID": ""
 	},
 	"d1_databases": [
@@ -57,6 +60,8 @@
 			"class_name": "AnalysisWorkflow"
 		}
 	],
+	// Sign-in codes from no-reply@rubrion.ai (Cloudflare Email Sending).
+	"send_email": [{ "name": "EMAIL" }],
 	"triggers": {
 		"crons": ["0 3 * * *"]
 	}

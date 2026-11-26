@@ -90,12 +90,20 @@
 	.top nav { display: flex; align-items: center; gap: 0.5rem; }
 	.top nav a:not(.btn) { color: var(--ink-soft); text-decoration: none; padding: 0.5rem 0.6rem; font-size: 0.95rem; }
 	.top nav a:not(.btn):hover { color: var(--ink); }
+	.top nav a[hidden] { display: none; }
 	.theme { display: inline-grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 999px; background: none; color: var(--ink-soft); cursor: pointer; }
 	.theme:hover { color: var(--ink); background: var(--rule); }
 	.theme svg { width: 20px; height: 20px; }
 	.theme__sun, :root[data-theme="dark"] .theme__moon { display: none; }
 	:root[data-theme="dark"] .theme__sun { display: block; }
 	@media (max-width: 560px) { .top nav .how { display: none; } }
+	/* Signed in, the header also holds the account's name: keep the wordmark and buttons on one line. */
+	.brand, .top nav .btn, .top nav .acct { white-space: nowrap; }
+	@media (max-width: 420px) {
+		.top { gap: 0.5rem; }
+		.top nav { gap: 0.15rem; }
+		.top nav a.acct { padding-inline: 0.4rem; max-width: 6.5rem; overflow: hidden; text-overflow: ellipsis; }
+	}
 
 	.foot { border-top: 1px solid var(--hair); margin-top: 5rem; padding-block: 2rem 3rem; color: var(--ink-faint); font-size: 0.9rem; display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; justify-content: space-between; }
 	.foot a { color: inherit; }

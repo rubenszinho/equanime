@@ -1,12 +1,11 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { MiddlewareHandler } from "hono";
+import { sessionUser, touch, type User } from "./accounts";
 import { logInfo } from "./log";
 import { sha256 } from "./normalize";
 import { envString } from "./settings";
 
-export type Actor = { id: string; kind: "user" | "service" | "development" };
-
-let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
+// `user` is set when the caller is signed in through the web app (its account).
+export type Actor = { id: string; kind: "user" | "service" | "development"; user?: User };
 
 function safeEqual(left: string, right: string): boolean {
 	const a = new TextEncoder().encode(left);
@@ -18,6 +17,10 @@ function safeEqual(left: string, right: string): boolean {
 }
 
 const OPEN = new Set(["/health", "/ready", "/openapi.json"]);
+// Signing in and up: only the web app calls it, with its key and no session yet.
+const SIGN_IN = "/conta/acesso";
+// An account whose email isn't confirmed yet can only see itself and confirm it.
+const UNCONFIRMED = new Set(["/conta", SIGN_IN]);
 
 export const authenticate: MiddlewareHandler<{ Bindings: CloudflareBindings; Variables: { actor: Actor } }> = async (c, next) => {
 	// The spec is public so OpenWebUI can import it before it holds a key.
@@ -25,24 +28,46 @@ export const authenticate: MiddlewareHandler<{ Bindings: CloudflareBindings; Var
 		await next();
 		return;
 	}
-	const actor = await identify(c.env, {
-		jwt: c.req.header("cf-access-jwt-assertion"),
-		bearer: c.req.header("authorization")?.replace(/^Bearer\s+/i, ""),
-		clientId: c.req.header("cf-access-client-id") ?? "",
-		clientSecret: c.req.header("cf-access-client-secret") ?? "",
-		person: c.req.header("x-equanime-person"),
-	});
-	if (!actor) return c.json({ status: "error", error_type: "unauthorized", message: "Autenticação obrigatória: Cloudflare Access ou a chave da integração." }, 401);
+	const bearer = c.req.header("authorization")?.replace(/^Bearer\s+/i, "");
+	const fromWeb = Boolean(bearer && c.env.WEB_KEY && safeEqual(bearer, c.env.WEB_KEY));
+	if (c.req.path === SIGN_IN) {
+		if (!fromWeb && envString(c.env, "AUTH_MODE") !== "dev") return c.json({ status: "error", error_type: "unauthorized", message: "Somente a aplicação web entra e cadastra contas." }, 401);
+		c.set("actor", { id: "service:web", kind: "service" });
+		await next();
+		return;
+	}
+	const actor = fromWeb
+		? await fromSession(c.env, c.req.header("x-equanime-session"))
+		: await identify(c.env, {
+			bearer,
+			clientId: c.req.header("cf-access-client-id") ?? "",
+			clientSecret: c.req.header("cf-access-client-secret") ?? "",
+			person: c.req.header("x-equanime-person"),
+		});
+	if (!actor) return c.json({ status: "error", error_type: "unauthorized", message: "Entre na sua conta do Equânime, ou use a chave da integração." }, 401);
+	if (actor.user && !actor.user.email_ok && !UNCONFIRMED.has(c.req.path)) {
+		return c.json({ status: "error", error_type: "email_unconfirmed", message: "Confirme seu e-mail com o código que enviamos antes de continuar." }, 403);
+	}
 	c.set("actor", actor);
 	// Who asked is kept in D1 for ownership; logs only get a short hash of it.
 	logInfo("request_authenticated", { actor: (await sha256(actor.id)).slice(0, 12), kind: actor.kind, path: c.req.path });
 	await next();
 };
 
+// The web app's visitor: the session token from its cookie, resolved here. The actor is the email,
+// as analyses have always been owned.
+async function fromSession(env: CloudflareBindings, token: string | undefined): Promise<Actor | null> {
+	if (envString(env, "AUTH_MODE") === "dev" && !token) return { id: "development", kind: "development" };
+	const user = await sessionUser(env.DB, token);
+	if (!user) return null;
+	await touch(env.DB, user.id);
+	return { id: user.email, kind: "user", user };
+}
+
 // Emails, "rubry:<id>", "openwebui:<email>" or "service:<name>".
 const PERSON = /^[a-z0-9][a-z0-9@._:+-]{2,199}$/;
 
-async function identify(env: CloudflareBindings, request: { jwt?: string; bearer?: string; clientId: string; clientSecret: string; person?: string }): Promise<Actor | null> {
+async function identify(env: CloudflareBindings, request: { bearer?: string; clientId: string; clientSecret: string; person?: string }): Promise<Actor | null> {
 	if (envString(env, "AUTH_MODE") === "dev") return { id: "development", kind: "development" };
 	// The Equânime agent acts for the person it is talking to; the header counts only with its key.
 	if (request.bearer && env.AGENT_KEY && safeEqual(request.bearer, env.AGENT_KEY)) {
@@ -50,24 +75,9 @@ async function identify(env: CloudflareBindings, request: { jwt?: string; bearer
 		if (!PERSON.test(person)) return null;
 		return { id: person, kind: person.startsWith("service:") ? "service" : "user" };
 	}
-	// OpenWebUI tool servers send a Bearer key, not Access headers. All its users share this actor.
+	// OpenWebUI tool servers send a Bearer key. All its users share this actor.
 	if (request.bearer && env.OPENWEBUI_KEY && safeEqual(request.bearer, env.OPENWEBUI_KEY)) return { id: "service:openwebui", kind: "service" };
-	const teamDomain = envString(env, "TEAM_DOMAIN").replace(/\/$/, "");
-	// One AUD per Access application: the web app forwards its user's JWT, the API host has its own.
-	const audiences = envString(env, "POLICY_AUD").split(",").map((item) => item.trim()).filter(Boolean);
-	if (request.jwt && teamDomain && audiences.length > 0) {
-		try {
-			jwks ??= createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
-			const { payload } = await jwtVerify(request.jwt, jwks, { issuer: teamDomain, audience: audiences });
-			const claims = payload as Record<string, unknown>;
-			if (typeof claims.email === "string") return { id: claims.email.toLowerCase(), kind: "user" };
-			// Service tokens carry common_name (the client ID) instead of an email.
-			if (typeof claims.common_name === "string") return { id: `service:${claims.common_name}`, kind: "service" };
-			return null;
-		} catch {
-			return null;
-		}
-	}
+	// Cloudflare Access service tokens (other Rubrion services).
 	const configuredId = envString(env, "ACCESS_CLIENT_ID");
 	if (configuredId && env.ACCESS_CLIENT_SECRET && safeEqual(request.clientId, configuredId) && safeEqual(request.clientSecret, env.ACCESS_CLIENT_SECRET)) {
 		return { id: `service:${request.clientId}`, kind: "service" };
